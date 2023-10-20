@@ -1,6 +1,6 @@
 import torch
 from torchvision.models import VisionTransformer
-from transformers import DistilBertConfig, DistilBertModel, DistilBertTokenizerFast
+from transformers import DistilBertConfig, DistilBertModel
 from copy import copy
 
 
