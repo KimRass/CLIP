@@ -1,6 +1,6 @@
+import torch
 from torch.utils.data import Dataset
 import torchvision.transforms as T
-# import torchvision.transforms.functional as TF
 from pathlib import Path
 import os
 from PIL import Image
@@ -23,7 +23,7 @@ def _encode(text, tokenizer, max_len):
         return_token_type_ids=False,
         return_attention_mask=False,
     )
-    token_ids = encoding["input_ids"]
+    token_ids = torch.tensor(encoding["input_ids"])
     return token_ids
 
 
