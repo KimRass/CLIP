@@ -1,10 +1,12 @@
 import torch
 import torch.nn as nn
+from pathlib import Path
 
 from utils import load_config
 from model import ImageEncoder, TextEncoder
 
-CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/config.yaml")
+# CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/config.yaml")
+CONFIG = load_config(Path(__file__).parent/"config.yaml")
 
 
 # class CLIP(object):
