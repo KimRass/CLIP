@@ -67,7 +67,7 @@ if __name__ == "__main__":
         text_dim=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["TEXT_DIM"],
         embed_dim=CONFIG["ARCHITECTURE"]["EMBED_DIM"],
         mlp_dim=CONFIG["ARCHITECTURE"]["MLP_DIM"],
-    )
+    ).to(DEVICE)
 
     # "For the Vision Transformers we train a ViT-B/32, a ViT-B/16, and a ViT-L/14. We use the Adam optimizer (Kingma & Ba, 2014) with decoupled weight decay regularization (Loshchilov & Hutter, 2017) applied to all weights that are not gains
     # or biases, and decay the learning rate using a cosine schedule (Loshchilov & Hutter, 2016). Initial"
