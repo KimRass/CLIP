@@ -40,7 +40,7 @@ class Flickr8kDataset(Dataset):
         # self.sep_id = tokenizer.sep_token_id
         # self.pad_id = tokenizer.pad_token_id
 
-        self.images_dir = self.data_dir/"images"
+        self.images_dir = self.data_dir/"Images"
         self.imgs = sorted(list(self.images_dir.glob("**/*.jpg")))
 
         self.transforms = T.Compose([
