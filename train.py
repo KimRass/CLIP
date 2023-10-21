@@ -6,6 +6,7 @@ from transformers import DistilBertTokenizerFast
 import argparse
 from time import time
 from tqdm import tqdm
+from pathlib import Path
 import wandb
 
 from utils import load_config, get_device, get_elapsed_time
@@ -13,7 +14,8 @@ from flickr import Flickr8kDataset
 from tokenizer import load_tokenizer
 from clip import CLIP
 
-CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/CONFIG.yaml")
+# CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/CONFIG.yaml")
+CONFIG = load_config(Path(__file__).parent/"config.yaml")
 
 DEVICE = get_device()
 
@@ -74,12 +76,6 @@ if __name__ == "__main__":
         betas=(CONFIG["OPTIMIZER"]["BETA1"], CONFIG["OPTIMIZER"]["BETA2"]),
         weight_decay=CONFIG["OPTIMIZER"]["WEIGHT_DECAY"],
     )
-    # batch_size = 4
-    # image = torch.randn((batch_size, 3, 224, 224))
-    # token_ids = torch.randint(100, size=(batch_size, 32))
-    # image, token_ids = next(iter(train_dl))
-    # img_loss, text_loss = clip.get_loss(image=image, token_ids=token_ids)
-    # print(img_loss, text_loss)
 
     scaler = GradScaler()
 
