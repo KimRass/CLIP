@@ -67,7 +67,7 @@ class CLIP(nn.Module):
         # checkpointing (Griewank & Walther, 2000; Chen et al., 2016), half-precision Adam statistics (Dhariwal et al., 2020), and half-precision stochastically rounded text encoder weights were used."
         # The calculation of embedding similarities was also sharded with individual GPUs computing only the subset of the pairwise similarities necessary for their local batch of embeddings. T"
         logits = torch.matmul(img_embed, text_embed.T) * torch.exp(self.temp)
-        labels = torch.arange(b)
+        labels = torch.arange(b).to(image.device)
         img_loss = self.ce(logits, labels) / 2
         text_loss = self.ce(logits.T, labels) / 2
         return img_loss, text_loss
