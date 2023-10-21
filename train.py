@@ -41,7 +41,8 @@ if __name__ == "__main__":
     tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
 
     flickr = Flickr8kDataset(
-        data_dir="/Users/jongbeomkim/Documents/datasets/flickr8k",
+        # data_dir="/Users/jongbeomkim/Documents/datasets/flickr8k",
+        data_dir=args.data_dir,
         tokenizer=tokenizer,
         max_len=64,
     )
