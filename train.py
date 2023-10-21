@@ -83,7 +83,7 @@ if __name__ == "__main__":
     init_epoch = 0
     for epoch in range(init_epoch + 1, CONFIG["TRAINING"]["N_EPOCHS"] + 1):
         start_time = time()
-        for step, (image, token_ids) in enumerate(tqdm(train_dl), start=1):
+        for step, (image, token_ids) in enumerate(train_dl, start=1):
             image = image.to(DEVICE)
             token_ids = token_ids.to(DEVICE)
 
