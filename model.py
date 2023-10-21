@@ -1,49 +1,52 @@
 import torch
+import torch.nn as nn
 from torchvision.models import VisionTransformer
 from transformers import DistilBertConfig, DistilBertModel
 from copy import copy
 
 
-class ImageEncoder(object):
-    def __init__(self, img_size, patch_size, n_heads, n_layers, hidden_dim, mlp_dim):
+class ImageEncoder(nn.Module):
+    def __init__(self, img_size, patch_size, n_heads, n_layers, img_dim, mlp_dim, embed_dim):
+        super().__init__()
+
         self.model = VisionTransformer(
             image_size=img_size,
             patch_size=patch_size,
             num_heads=n_heads,
             num_layers=n_layers,
-            hidden_dim=hidden_dim,
+            hidden_dim=img_dim,
             mlp_dim=mlp_dim,
         )
-        self.model.heads.head.register_forward_hook(self.get_img_embed())
+        self.model.heads = nn.Identity()
+        self.img_proj = nn.Linear(img_dim, embed_dim)
 
-    def get_img_embed(self):
-        def forward_hook_fn(model, input, output):
-            self.img_embed = input[0]
-        return forward_hook_fn
-
-    def encode_img(self, image):
-        self.model(image)
-        return copy(self.img_embed)
+    def forward(self, x):
+        x = self.model(x)
+        x = self.img_proj(x)
+        return x
 
 
-class TextEncoder(object):
-    def __init__(self, max_len, n_heads, n_layers, hidden_dim, mlp_dim):
+class TextEncoder(nn.Module):
+    def __init__(self, max_len, n_heads, n_layers, text_dim, mlp_dim, embed_dim):
+        super().__init__()
+
         self.model = DistilBertModel(
             DistilBertConfig(
                 max_position_embeddings=max_len,
                 n_heads=n_heads,
                 n_layers=n_layers,
-                dim=hidden_dim,
+                dim=text_dim,
                 hidden_dim=mlp_dim,
                 attention_dropout=0.1,
             )
         )
-        # self.tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
+        self.text_proj = nn.Linear(text_dim, embed_dim)
 
-    def encode_text(self, token_ids):
-        out = self.model(token_ids)
-        text_embed = out.last_hidden_state[:, 0, :]
-        return text_embed
+    def forward(self, x):
+        x = self.model(x)
+        x = x.last_hidden_state[:, 0, :]
+        x = self.text_proj(x)
+        return x
 
 
 if __name__ == "__main__":

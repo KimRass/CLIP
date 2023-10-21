@@ -1,0 +1,9 @@
+/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/torch/cuda/amp/grad_scaler.py:120: UserWarning: torch.cuda.amp.GradScaler is enabled, but CUDA is not available.  Disabling.
+  warnings.warn("torch.cuda.amp.GradScaler is enabled, but CUDA is not available.  Disabling.")
+  0%|                                                  | 0/2022 [00:24<?, ?it/s]
+Traceback (most recent call last):
+  File "/Users/jongbeomkim/Desktop/workspace/CLIP/train.py", line 98, in <module>
+    img_loss, text_loss = clip.get_loss(image=image, token_ids=token_ids)
+  File "/Users/jongbeomkim/Desktop/workspace/CLIP/clip.py", line 67, in get_loss
+    logits = torch.matmul(img_embed, text_embed.T) * torch.exp(self.temp)
+RuntimeError: mat1 and mat2 shapes cannot be multiplied (4x256 and 768x4)

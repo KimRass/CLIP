@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/jongbeomkim/Desktop/workspace/CLIP/train.py", line 64, in <module>
+    text_dim=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["TEXT_DIM"],
+KeyError: 'TEXT_DIM'

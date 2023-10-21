@@ -1,0 +1,179 @@
+2023-10-22 01:58:51,010 INFO    StreamThr :19923 [internal.py:wandb_internal():86] W&B internal server running at pid: 19923, started at: 2023-10-22 01:58:51.009101
+2023-10-22 01:58:51,014 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: status
+2023-10-22 01:58:51,019 INFO    WriterThread:19923 [datastore.py:open_for_write():85] open: /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/run-knp6mbg1.wandb
+2023-10-22 01:58:51,019 DEBUG   SenderThread:19923 [sender.py:send():380] send: header
+2023-10-22 01:58:51,036 DEBUG   SenderThread:19923 [sender.py:send():380] send: run
+2023-10-22 01:58:51,517 INFO    SenderThread:19923 [dir_watcher.py:__init__():211] watching files in: /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files
+2023-10-22 01:58:51,517 INFO    SenderThread:19923 [sender.py:_start_run_threads():1122] run started: knp6mbg1 with start time 1697907531.009695
+2023-10-22 01:58:51,533 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: check_version
+2023-10-22 01:58:51,533 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: check_version
+2023-10-22 01:58:51,578 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: run_start
+2023-10-22 01:58:51,584 DEBUG   HandlerThread:19923 [system_info.py:__init__():32] System info init
+2023-10-22 01:58:51,584 DEBUG   HandlerThread:19923 [system_info.py:__init__():47] System info init done
+2023-10-22 01:58:51,584 INFO    HandlerThread:19923 [system_monitor.py:start():194] Starting system monitor
+2023-10-22 01:58:51,585 INFO    SystemMonitor:19923 [system_monitor.py:_start():158] Starting system asset monitoring threads
+2023-10-22 01:58:51,585 INFO    HandlerThread:19923 [system_monitor.py:probe():214] Collecting system info
+2023-10-22 01:58:51,585 INFO    SystemMonitor:19923 [interfaces.py:start():190] Started cpu monitoring
+2023-10-22 01:58:51,586 INFO    SystemMonitor:19923 [interfaces.py:start():190] Started disk monitoring
+2023-10-22 01:58:51,587 INFO    SystemMonitor:19923 [interfaces.py:start():190] Started gpuapple monitoring
+2023-10-22 01:58:51,590 DEBUG   HandlerThread:19923 [system_info.py:probe():196] Probing system
+2023-10-22 01:58:51,591 INFO    SystemMonitor:19923 [interfaces.py:start():190] Started memory monitoring
+2023-10-22 01:58:51,591 INFO    SystemMonitor:19923 [interfaces.py:start():190] Started network monitoring
+2023-10-22 01:58:51,595 DEBUG   HandlerThread:19923 [system_info.py:_probe_git():181] Probing git
+2023-10-22 01:58:51,613 DEBUG   HandlerThread:19923 [system_info.py:_probe_git():189] Probing git done
+2023-10-22 01:58:51,613 DEBUG   HandlerThread:19923 [system_info.py:probe():244] Probing system done
+2023-10-22 01:58:51,613 DEBUG   HandlerThread:19923 [system_monitor.py:probe():223] {'os': 'macOS-13.3.1-arm64-arm-64bit', 'python': '3.9.13', 'heartbeatAt': '2023-10-21T16:58:51.590558', 'startedAt': '2023-10-21T16:58:50.994217', 'docker': None, 'cuda': None, 'args': ('--data_dir=/Users/jongbeomkim/Documents/datasets/flickr8k', '--n_cpus=1', '--batch_size=4'), 'state': 'running', 'program': '/Users/jongbeomkim/Desktop/workspace/CLIP/train.py', 'codePathLocal': 'train.py', 'codePath': 'train.py', 'git': {'remote': 'https://github.com/KimRass/CLIP', 'commit': '024acebff2b5de1f363a5ad0a7d280c96220054f'}, 'email': 'rmx1000@tonsei.ac.kr', 'root': '/Users/jongbeomkim/Desktop/workspace/CLIP', 'host': 'Jongbeoms-MacBook-Air.local', 'username': 'jongbeomkim', 'executable': '/Users/jongbeomkim/Desktop/workspace/venv/cv/bin/python3', 'cpu_count': 8, 'cpu_count_logical': 8, 'disk': {'/': {'total': 228.27386474609375, 'used': 11.17238998413086}}, 'gpuapple': {'type': 'arm', 'vendor': 'Apple'}, 'memory': {'total': 16.0}}
+2023-10-22 01:58:51,613 INFO    HandlerThread:19923 [system_monitor.py:probe():224] Finished collecting system info
+2023-10-22 01:58:51,613 INFO    HandlerThread:19923 [system_monitor.py:probe():227] Publishing system info
+2023-10-22 01:58:51,613 DEBUG   HandlerThread:19923 [system_info.py:_save_pip():52] Saving list of pip packages installed into the current environment
+2023-10-22 01:58:51,614 DEBUG   HandlerThread:19923 [system_info.py:_save_pip():68] Saving pip packages done
+2023-10-22 01:58:51,614 INFO    HandlerThread:19923 [system_monitor.py:probe():229] Finished publishing system info
+2023-10-22 01:58:51,616 DEBUG   SenderThread:19923 [sender.py:send():380] send: files
+2023-10-22 01:58:51,617 INFO    SenderThread:19923 [sender.py:_save_file():1378] saving file wandb-metadata.json with policy now
+2023-10-22 01:58:51,621 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: stop_status
+2023-10-22 01:58:51,621 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: internal_messages
+2023-10-22 01:58:51,621 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: stop_status
+2023-10-22 01:58:51,870 DEBUG   SenderThread:19923 [sender.py:send():380] send: telemetry
+2023-10-22 01:58:51,870 DEBUG   SenderThread:19923 [sender.py:send():380] send: config
+2023-10-22 01:58:52,340 INFO    wandb-upload_0:19923 [upload_job.py:push():131] Uploaded file /var/folders/dk/lvbg207938s2wdjbg0gq9d8w0000gn/T/tmp6_aavmtwwandb/y0nvy0sc-wandb-metadata.json
+2023-10-22 01:58:52,453 DEBUG   SenderThread:19923 [sender.py:send():380] send: exit
+2023-10-22 01:58:52,453 INFO    SenderThread:19923 [sender.py:send_exit():585] handling exit code: 1
+2023-10-22 01:58:52,453 INFO    SenderThread:19923 [sender.py:send_exit():587] handling runtime: 0
+2023-10-22 01:58:52,453 INFO    SenderThread:19923 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-10-22 01:58:52,453 INFO    SenderThread:19923 [sender.py:send_exit():593] send defer
+2023-10-22 01:58:52,454 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: defer
+2023-10-22 01:58:52,454 INFO    HandlerThread:19923 [handler.py:handle_request_defer():172] handle defer: 0
+2023-10-22 01:58:52,454 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: defer
+2023-10-22 01:58:52,454 INFO    SenderThread:19923 [sender.py:send_request_defer():609] handle sender defer: 0
+2023-10-22 01:58:52,454 INFO    SenderThread:19923 [sender.py:transition_state():613] send defer: 1
+2023-10-22 01:58:52,454 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: defer
+2023-10-22 01:58:52,454 INFO    HandlerThread:19923 [handler.py:handle_request_defer():172] handle defer: 1
+2023-10-22 01:58:52,454 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: defer
+2023-10-22 01:58:52,454 INFO    SenderThread:19923 [sender.py:send_request_defer():609] handle sender defer: 1
+2023-10-22 01:58:52,454 INFO    SenderThread:19923 [sender.py:transition_state():613] send defer: 2
+2023-10-22 01:58:52,454 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: defer
+2023-10-22 01:58:52,454 INFO    HandlerThread:19923 [handler.py:handle_request_defer():172] handle defer: 2
+2023-10-22 01:58:52,454 INFO    HandlerThread:19923 [system_monitor.py:finish():203] Stopping system monitor
+2023-10-22 01:58:52,454 INFO    HandlerThread:19923 [interfaces.py:finish():202] Joined cpu monitor
+2023-10-22 01:58:52,454 DEBUG   SystemMonitor:19923 [system_monitor.py:_start():172] Starting system metrics aggregation loop
+2023-10-22 01:58:52,454 DEBUG   SystemMonitor:19923 [system_monitor.py:_start():179] Finished system metrics aggregation loop
+2023-10-22 01:58:52,454 DEBUG   SystemMonitor:19923 [system_monitor.py:_start():183] Publishing last batch of metrics
+2023-10-22 01:58:52,455 INFO    HandlerThread:19923 [interfaces.py:finish():202] Joined disk monitor
+2023-10-22 01:58:52,455 INFO    HandlerThread:19923 [interfaces.py:finish():202] Joined gpuapple monitor
+2023-10-22 01:58:52,455 INFO    HandlerThread:19923 [interfaces.py:finish():202] Joined memory monitor
+2023-10-22 01:58:52,455 INFO    HandlerThread:19923 [interfaces.py:finish():202] Joined network monitor
+2023-10-22 01:58:52,455 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: defer
+2023-10-22 01:58:52,455 INFO    SenderThread:19923 [sender.py:send_request_defer():609] handle sender defer: 2
+2023-10-22 01:58:52,455 INFO    SenderThread:19923 [sender.py:transition_state():613] send defer: 3
+2023-10-22 01:58:52,455 DEBUG   SenderThread:19923 [sender.py:send():380] send: telemetry
+2023-10-22 01:58:52,455 DEBUG   SenderThread:19923 [sender.py:send():380] send: stats
+2023-10-22 01:58:52,455 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: defer
+2023-10-22 01:58:52,455 INFO    HandlerThread:19923 [handler.py:handle_request_defer():172] handle defer: 3
+2023-10-22 01:58:52,455 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: defer
+2023-10-22 01:58:52,455 INFO    SenderThread:19923 [sender.py:send_request_defer():609] handle sender defer: 3
+2023-10-22 01:58:52,455 INFO    SenderThread:19923 [sender.py:transition_state():613] send defer: 4
+2023-10-22 01:58:52,455 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: defer
+2023-10-22 01:58:52,455 INFO    HandlerThread:19923 [handler.py:handle_request_defer():172] handle defer: 4
+2023-10-22 01:58:52,455 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: defer
+2023-10-22 01:58:52,455 INFO    SenderThread:19923 [sender.py:send_request_defer():609] handle sender defer: 4
+2023-10-22 01:58:52,455 INFO    SenderThread:19923 [sender.py:transition_state():613] send defer: 5
+2023-10-22 01:58:52,456 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: defer
+2023-10-22 01:58:52,456 INFO    HandlerThread:19923 [handler.py:handle_request_defer():172] handle defer: 5
+2023-10-22 01:58:52,456 DEBUG   SenderThread:19923 [sender.py:send():380] send: summary
+2023-10-22 01:58:52,456 INFO    SenderThread:19923 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-10-22 01:58:52,456 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: defer
+2023-10-22 01:58:52,456 INFO    SenderThread:19923 [sender.py:send_request_defer():609] handle sender defer: 5
+2023-10-22 01:58:52,456 INFO    SenderThread:19923 [sender.py:transition_state():613] send defer: 6
+2023-10-22 01:58:52,456 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: defer
+2023-10-22 01:58:52,456 INFO    HandlerThread:19923 [handler.py:handle_request_defer():172] handle defer: 6
+2023-10-22 01:58:52,456 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: defer
+2023-10-22 01:58:52,456 INFO    SenderThread:19923 [sender.py:send_request_defer():609] handle sender defer: 6
+2023-10-22 01:58:52,458 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: status_report
+2023-10-22 01:58:52,523 INFO    Thread-12 :19923 [dir_watcher.py:_on_file_created():271] file/dir created: /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files/wandb-metadata.json
+2023-10-22 01:58:52,523 INFO    Thread-12 :19923 [dir_watcher.py:_on_file_created():271] file/dir created: /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files/output.log
+2023-10-22 01:58:52,523 INFO    Thread-12 :19923 [dir_watcher.py:_on_file_created():271] file/dir created: /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files/wandb-summary.json
+2023-10-22 01:58:52,523 INFO    Thread-12 :19923 [dir_watcher.py:_on_file_created():271] file/dir created: /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files/requirements.txt
+2023-10-22 01:58:52,712 INFO    SenderThread:19923 [sender.py:transition_state():613] send defer: 7
+2023-10-22 01:58:52,712 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: defer
+2023-10-22 01:58:52,712 INFO    HandlerThread:19923 [handler.py:handle_request_defer():172] handle defer: 7
+2023-10-22 01:58:52,713 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: defer
+2023-10-22 01:58:52,713 INFO    SenderThread:19923 [sender.py:send_request_defer():609] handle sender defer: 7
+2023-10-22 01:58:53,459 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: poll_exit
+2023-10-22 01:58:53,528 INFO    Thread-12 :19923 [dir_watcher.py:_on_file_modified():288] file/dir modified: /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files/config.yaml
+2023-10-22 01:58:54,465 INFO    SenderThread:19923 [sender.py:transition_state():613] send defer: 8
+2023-10-22 01:58:54,465 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: poll_exit
+2023-10-22 01:58:54,466 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: defer
+2023-10-22 01:58:54,466 INFO    HandlerThread:19923 [handler.py:handle_request_defer():172] handle defer: 8
+2023-10-22 01:58:54,468 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: defer
+2023-10-22 01:58:54,468 INFO    SenderThread:19923 [sender.py:send_request_defer():609] handle sender defer: 8
+2023-10-22 01:58:54,468 INFO    SenderThread:19923 [job_builder.py:build():281] Attempting to build job artifact
+2023-10-22 01:58:54,469 INFO    SenderThread:19923 [job_builder.py:_get_source_type():393] is repo sourced job
+2023-10-22 01:58:54,472 INFO    SenderThread:19923 [job_builder.py:build():369] adding wandb-job metadata file
+2023-10-22 01:58:54,476 INFO    SenderThread:19923 [sender.py:transition_state():613] send defer: 9
+2023-10-22 01:58:54,477 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: defer
+2023-10-22 01:58:54,477 INFO    HandlerThread:19923 [handler.py:handle_request_defer():172] handle defer: 9
+2023-10-22 01:58:54,477 DEBUG   SenderThread:19923 [sender.py:send():380] send: artifact
+2023-10-22 01:58:54,530 INFO    Thread-12 :19923 [dir_watcher.py:_on_file_modified():288] file/dir modified: /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files/output.log
+2023-10-22 01:58:55,581 INFO    SenderThread:19923 [sender.py:send_artifact():1456] sent artifact job-https___github.com_KimRass_CLIP_train.py - {'id': 'QXJ0aWZhY3Q6NjExOTk4MTYy', 'state': 'COMMITTED', 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjEwODY5ODk1MA==', 'latestArtifact': {'id': 'QXJ0aWZhY3Q6NjExOTk4MTYy', 'versionIndex': 0}}}
+2023-10-22 01:58:55,581 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: defer
+2023-10-22 01:58:55,581 INFO    SenderThread:19923 [sender.py:send_request_defer():609] handle sender defer: 9
+2023-10-22 01:58:55,581 INFO    SenderThread:19923 [dir_watcher.py:finish():358] shutting down directory watcher
+2023-10-22 01:58:56,537 INFO    SenderThread:19923 [dir_watcher.py:finish():388] scan: /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files
+2023-10-22 01:58:56,537 INFO    SenderThread:19923 [dir_watcher.py:finish():402] scan save: /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files/requirements.txt requirements.txt
+2023-10-22 01:58:56,538 INFO    SenderThread:19923 [dir_watcher.py:finish():402] scan save: /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files/output.log output.log
+2023-10-22 01:58:56,542 INFO    SenderThread:19923 [dir_watcher.py:finish():402] scan save: /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files/config.yaml config.yaml
+2023-10-22 01:58:56,546 INFO    SenderThread:19923 [dir_watcher.py:finish():402] scan save: /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files/wandb-summary.json wandb-summary.json
+2023-10-22 01:58:56,551 INFO    SenderThread:19923 [dir_watcher.py:finish():402] scan save: /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files/wandb-metadata.json wandb-metadata.json
+2023-10-22 01:58:56,551 INFO    SenderThread:19923 [sender.py:transition_state():613] send defer: 10
+2023-10-22 01:58:56,552 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: defer
+2023-10-22 01:58:56,554 INFO    HandlerThread:19923 [handler.py:handle_request_defer():172] handle defer: 10
+2023-10-22 01:58:56,555 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: defer
+2023-10-22 01:58:56,556 INFO    SenderThread:19923 [sender.py:send_request_defer():609] handle sender defer: 10
+2023-10-22 01:58:56,556 INFO    SenderThread:19923 [file_pusher.py:finish():175] shutting down file pusher
+2023-10-22 01:58:57,015 INFO    wandb-upload_1:19923 [upload_job.py:push():131] Uploaded file /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files/output.log
+2023-10-22 01:58:57,081 INFO    wandb-upload_0:19923 [upload_job.py:push():131] Uploaded file /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files/requirements.txt
+2023-10-22 01:58:57,101 INFO    wandb-upload_3:19923 [upload_job.py:push():131] Uploaded file /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files/wandb-summary.json
+2023-10-22 01:58:57,112 INFO    wandb-upload_2:19923 [upload_job.py:push():131] Uploaded file /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/files/config.yaml
+2023-10-22 01:58:57,317 INFO    Thread-11 :19923 [sender.py:transition_state():613] send defer: 11
+2023-10-22 01:58:57,317 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: defer
+2023-10-22 01:58:57,318 INFO    HandlerThread:19923 [handler.py:handle_request_defer():172] handle defer: 11
+2023-10-22 01:58:57,318 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: defer
+2023-10-22 01:58:57,318 INFO    SenderThread:19923 [sender.py:send_request_defer():609] handle sender defer: 11
+2023-10-22 01:58:57,318 INFO    SenderThread:19923 [file_pusher.py:join():181] waiting for file pusher
+2023-10-22 01:58:57,318 INFO    SenderThread:19923 [sender.py:transition_state():613] send defer: 12
+2023-10-22 01:58:57,319 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: defer
+2023-10-22 01:58:57,319 INFO    HandlerThread:19923 [handler.py:handle_request_defer():172] handle defer: 12
+2023-10-22 01:58:57,319 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: defer
+2023-10-22 01:58:57,319 INFO    SenderThread:19923 [sender.py:send_request_defer():609] handle sender defer: 12
+2023-10-22 01:58:57,320 INFO    SenderThread:19923 [file_stream.py:finish():595] file stream finish called
+2023-10-22 01:58:57,545 INFO    SenderThread:19923 [file_stream.py:finish():599] file stream finish is done
+2023-10-22 01:58:57,546 INFO    SenderThread:19923 [sender.py:transition_state():613] send defer: 13
+2023-10-22 01:58:57,546 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: defer
+2023-10-22 01:58:57,546 INFO    HandlerThread:19923 [handler.py:handle_request_defer():172] handle defer: 13
+2023-10-22 01:58:57,546 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: defer
+2023-10-22 01:58:57,547 INFO    SenderThread:19923 [sender.py:send_request_defer():609] handle sender defer: 13
+2023-10-22 01:58:57,547 INFO    SenderThread:19923 [sender.py:transition_state():613] send defer: 14
+2023-10-22 01:58:57,547 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: defer
+2023-10-22 01:58:57,548 DEBUG   SenderThread:19923 [sender.py:send():380] send: final
+2023-10-22 01:58:57,548 INFO    HandlerThread:19923 [handler.py:handle_request_defer():172] handle defer: 14
+2023-10-22 01:58:57,548 DEBUG   SenderThread:19923 [sender.py:send():380] send: footer
+2023-10-22 01:58:57,548 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: defer
+2023-10-22 01:58:57,548 INFO    SenderThread:19923 [sender.py:send_request_defer():609] handle sender defer: 14
+2023-10-22 01:58:57,549 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: poll_exit
+2023-10-22 01:58:57,550 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: server_info
+2023-10-22 01:58:57,550 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: poll_exit
+2023-10-22 01:58:57,551 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: server_info
+2023-10-22 01:58:57,551 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: get_summary
+2023-10-22 01:58:57,553 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: sampled_history
+2023-10-22 01:58:57,554 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: internal_messages
+2023-10-22 01:58:57,554 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: job_info
+2023-10-22 01:58:57,744 DEBUG   SenderThread:19923 [sender.py:send_request():407] send_request: job_info
+2023-10-22 01:58:57,745 INFO    MainThread:19923 [wandb_run.py:_footer_history_summary_info():3599] rendering history
+2023-10-22 01:58:57,745 INFO    MainThread:19923 [wandb_run.py:_footer_history_summary_info():3631] rendering summary
+2023-10-22 01:58:57,745 INFO    MainThread:19923 [wandb_run.py:_footer_sync_info():3558] logging synced files
+2023-10-22 01:58:57,746 DEBUG   HandlerThread:19923 [handler.py:handle_request():146] handle_request: shutdown
+2023-10-22 01:58:57,746 INFO    HandlerThread:19923 [handler.py:finish():866] shutting down handler
+2023-10-22 01:58:58,559 INFO    WriterThread:19923 [datastore.py:close():294] close: /Users/jongbeomkim/Desktop/workspace/CLIP/wandb/run-20231022_015850-knp6mbg1/run-knp6mbg1.wandb
+2023-10-22 01:58:58,749 INFO    SenderThread:19923 [sender.py:finish():1534] shutting down sender
+2023-10-22 01:58:58,749 INFO    SenderThread:19923 [file_pusher.py:finish():175] shutting down file pusher
+2023-10-22 01:58:58,750 INFO    SenderThread:19923 [file_pusher.py:join():181] waiting for file pusher

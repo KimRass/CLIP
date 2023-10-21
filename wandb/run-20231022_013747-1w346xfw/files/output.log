@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/jongbeomkim/Desktop/workspace/CLIP/train.py", line 72, in <module>
+    clip.parameters(),
+AttributeError: 'CLIP' object has no attribute 'parameters'

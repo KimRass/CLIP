@@ -7,7 +7,8 @@ from model import ImageEncoder, TextEncoder
 CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/config.yaml")
 
 
-class CLIP(object):
+# class CLIP(object):
+class CLIP(nn.Module):
     def __init__(
         self,
         img_size,
@@ -17,26 +18,28 @@ class CLIP(object):
         n_layers,
         img_dim,
         text_dim,
-        embed_dim,
         mlp_dim,
+        embed_dim,
     ):
+        super().__init__()
+
         self.img_enc = ImageEncoder(
             img_size=img_size,
             patch_size=patch_size,
             n_heads=n_heads,
             n_layers=n_layers,
-            hidden_dim=img_dim,
+            img_dim=img_dim,
             mlp_dim=mlp_dim,
+            embed_dim=embed_dim,
         )
         self.text_enc = TextEncoder(
             max_len=max_len,
             n_heads=n_heads,
             n_layers=n_layers,
-            hidden_dim=text_dim,
+            text_dim=text_dim,
             mlp_dim=mlp_dim,
+            embed_dim=embed_dim,
         )
-        self.img_proj = nn.Linear(img_dim, embed_dim)
-        self.text_proj = nn.Linear(text_dim, embed_dim)
 
         # "The learnable temperature parameter was initialized to the equivalent of 0.07 from and clipped
         # to prevent scaling the logits by more than 100 which we found necessary to prevent training instability."
@@ -50,13 +53,11 @@ class CLIP(object):
     def get_loss(self, image, token_ids):
         b, _, _, _ = image.shape
 
-        img_embed = self.img_enc.encode_img(image)
-        img_embed = self.img_proj(img_embed)
+        img_embed = self.img_enc(image)
         img_embed = self._l2_norm(img_embed)
         # return img_embed
 
-        text_embed = self.text_enc.encode_text(token_ids)
-        text_embed = self.text_proj(text_embed)
+        text_embed = self.text_enc(token_ids)
         text_embed = self._l2_norm(text_embed)
 
         # "We use a very large minibatch size of 32,768."

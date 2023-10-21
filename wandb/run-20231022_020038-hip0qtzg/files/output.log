@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/jongbeomkim/Desktop/workspace/CLIP/train.py", line 73, in <module>
+    lr=CONFIG["OPTIMIZER"]["LR"],
+KeyError: 'LR'

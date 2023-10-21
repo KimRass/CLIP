@@ -1,0 +1,40 @@
+/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/torch/cuda/amp/grad_scaler.py:120: UserWarning: torch.cuda.amp.GradScaler is enabled, but CUDA is not available.  Disabling.
+  warnings.warn("torch.cuda.amp.GradScaler is enabled, but CUDA is not available.  Disabling.")
+
+
+
+  0%|                                      | 3/2022 [06:15<70:14:51, 125.26s/it]
+Traceback (most recent call last):
+  File "/Users/jongbeomkim/Desktop/workspace/CLIP/train.py", line 98, in <module>
+    img_loss, text_loss = clip.get_loss(image=image, token_ids=token_ids)
+  File "/Users/jongbeomkim/Desktop/workspace/CLIP/clip.py", line 60, in get_loss
+    text_embed = self.text_enc(token_ids)
+  File "/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/jongbeomkim/Desktop/workspace/CLIP/model.py", line 46, in forward
+    x = self.model(x)
+  File "/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/transformers/models/distilbert/modeling_distilbert.py", line 583, in forward
+    return self.transformer(
+  File "/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/transformers/models/distilbert/modeling_distilbert.py", line 359, in forward
+    layer_outputs = layer_module(
+  File "/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/transformers/models/distilbert/modeling_distilbert.py", line 313, in forward
+    ffn_output = self.ffn(sa_output)  # (bs, seq_length, dim)
+  File "/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/transformers/models/distilbert/modeling_distilbert.py", line 254, in forward
+    return apply_chunking_to_forward(self.ff_chunk, self.chunk_size_feed_forward, self.seq_len_dim, input)
+  File "/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/transformers/pytorch_utils.py", line 236, in apply_chunking_to_forward
+    return forward_fn(*input_tensors)
+  File "/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/transformers/models/distilbert/modeling_distilbert.py", line 259, in ff_chunk
+    x = self.lin2(x)
+  File "/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/torch/nn/modules/linear.py", line 114, in forward
+    return F.linear(input, self.weight, self.bias)
+KeyboardInterrupt

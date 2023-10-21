@@ -1,0 +1,12 @@
+/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/torch/cuda/amp/grad_scaler.py:120: UserWarning: torch.cuda.amp.GradScaler is enabled, but CUDA is not available.  Disabling.
+  warnings.warn("torch.cuda.amp.GradScaler is enabled, but CUDA is not available.  Disabling.")
+  0%|                                                  | 0/2022 [00:00<?, ?it/s]/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/torch/amp/autocast_mode.py:216: UserWarning: In CPU autocast, but the target dtype is not supported. Disabling autocast.
+CPU Autocast only supports dtype of torch.bfloat16 currently.
+  warnings.warn(error_message)
+  0%|                                                  | 0/2022 [00:06<?, ?it/s]
+Traceback (most recent call last):
+  File "/Users/jongbeomkim/Desktop/workspace/CLIP/train.py", line 93, in <module>
+    with torch.autocast(device_type=DEVICE.type, dtype=torch.float16, enabled=True):
+  File "/Users/jongbeomkim/Desktop/workspace/venv/cv/lib/python3.9/site-packages/torch/amp/autocast_mode.py", line 247, in __enter__
+    torch.set_autocast_cpu_dtype(self.fast_dtype)  # type: ignore[arg-type]
+RuntimeError: Currently, AutocastCPU only support Bfloat16 as the autocast_cpu_dtype

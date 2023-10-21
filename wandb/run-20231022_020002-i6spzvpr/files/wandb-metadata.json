@@ -1,0 +1,41 @@
+{
+    "os": "macOS-13.3.1-arm64-arm-64bit",
+    "python": "3.9.13",
+    "heartbeatAt": "2023-10-21T17:00:03.398720",
+    "startedAt": "2023-10-21T17:00:02.819226",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "--data_dir=/Users/jongbeomkim/Documents/datasets/flickr8k",
+        "--n_cpus=1",
+        "--batch_size=4"
+    ],
+    "state": "running",
+    "program": "/Users/jongbeomkim/Desktop/workspace/CLIP/train.py",
+    "codePathLocal": "train.py",
+    "codePath": "train.py",
+    "git": {
+        "remote": "https://github.com/KimRass/CLIP",
+        "commit": "024acebff2b5de1f363a5ad0a7d280c96220054f"
+    },
+    "email": "rmx1000@tonsei.ac.kr",
+    "root": "/Users/jongbeomkim/Desktop/workspace/CLIP",
+    "host": "Jongbeoms-MacBook-Air.local",
+    "username": "jongbeomkim",
+    "executable": "/Users/jongbeomkim/Desktop/workspace/venv/cv/bin/python3",
+    "cpu_count": 8,
+    "cpu_count_logical": 8,
+    "disk": {
+        "/": {
+            "total": 228.27386474609375,
+            "used": 11.17238998413086
+        }
+    },
+    "gpuapple": {
+        "type": "arm",
+        "vendor": "Apple"
+    },
+    "memory": {
+        "total": 16.0
+    }
+}

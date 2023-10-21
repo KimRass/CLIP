@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/Users/jongbeomkim/Desktop/workspace/CLIP/train.py", line 57, in <module>
+    clip = CLIP(
+  File "/Users/jongbeomkim/Desktop/workspace/CLIP/clip.py", line 35, in __init__
+    self.text_enc = TextEncoder(
+TypeError: __init__() got an unexpected keyword argument 'hidden_dim'

@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/Users/jongbeomkim/Desktop/workspace/CLIP/train.py", line 75, in <module>
+    weight_decay=CONFIG["OPTIMIZER"]["WEIGHT_DECAY"],
+KeyError: 'WEIGHT_DECAY'
