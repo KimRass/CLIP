@@ -1,5 +1,5 @@
 import torch
-from torch.optim import Adam
+from torch.optim import AdamW
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler
 from transformers import DistilBertTokenizerFast
@@ -62,26 +62,30 @@ if __name__ == "__main__":
     clip = CLIP(
         img_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
         patch_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["PATCH_SIZE"],
+        img_n_layers=CONFIG["ARCHITECTURE"]["IMG_ENC"]["N_LAYERS"],
+        img_n_heads=CONFIG["ARCHITECTURE"]["IMG_ENC"]["N_HEADS"],
+        img_hidden_dim=CONFIG["ARCHITECTURE"]["IMG_ENC"]["HIDDEN_DIM"],
+        img_mlp_dim=CONFIG["ARCHITECTURE"]["IMG_ENC"]["MLP_DIM"],
+        vocab_size=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["VOCAB_SIZE"],
         max_len=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["MAX_LEN"],
-        # n_heads=CONFIG["ARCHITECTURE"]["N_HEADS"],
-        # n_layers=CONFIG["ARCHITECTURE"]["N_LAYERS"],
-        img_dim=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_DIM"],
-        text_dim=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["TEXT_DIM"],
+        text_n_layers=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["N_LAYERS"],
+        text_n_heads=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["N_HEADS"],
+        text_hidden_dim=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["HIDDEN_DIM"],
+        text_mlp_dim=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["MLP_DIM"],
         embed_dim=CONFIG["ARCHITECTURE"]["EMBED_DIM"],
-        mlp_dim=CONFIG["ARCHITECTURE"]["MLP_DIM"],
     ).to(DEVICE)
-    clip
 
-    # "For the Vision Transformers we train a ViT-B/32, a ViT-B/16, and a ViT-L/14. We use the Adam optimizer (Kingma & Ba, 2014) with decoupled weight decay regularization (Loshchilov & Hutter, 2017) applied to all weights that are not gains
-    # or biases, and decay the learning rate using a cosine schedule (Loshchilov & Hutter, 2016). Initial"
-    optim = Adam(
+    # "We use the Adam optimizer with decoupled weight decay regularization (Loshchilov & Hutter, 2017) applied to all
+    # weights that are not gains or biases, and decay the learning rate using a cosine schedule."
+    optim = AdamW(
         clip.parameters(),
         lr=CONFIG["TRAINING"]["LR"],
         betas=(CONFIG["OPTIMIZER"]["BETA1"], CONFIG["OPTIMIZER"]["BETA2"]),
         weight_decay=CONFIG["OPTIMIZER"]["WEIGHT_DECAY"],
     )
 
-    scaler = GradScaler()
+    if DEVICE.type == "cuda":
+        scaler = GradScaler()
 
     init_epoch = 0
     start_time = time()
@@ -101,17 +105,27 @@ if __name__ == "__main__":
                 tot_loss = img_loss + text_loss
 
             optim.zero_grad()
-            scaler.scale(tot_loss).backward()
-            scaler.step(optim)
+            if DEVICE.type == "cuda":
+                scaler.scale(tot_loss).backward()
+                scaler.step(optim)
+                scaler.update()
+            else:
+                tot_loss.backward()
+                optim.step()
 
-            scaler.update()
+            # "The learnable temperature parameter was clipped to prevent scaling the logits by more than 100
+            # which we found necessary to prevent training instability."
+            with torch.no_grad():
+                clip.temp.clamp_(max=100)
 
             if step % 10 == 0:
+            # if step % 1 == 0:
                 msg = f"[ {get_elapsed_time(start_time)} ]"
                 msg += f"""[ {epoch}/{CONFIG["TRAINING"]["N_EPOCHS"]} ]"""
                 msg += f"""[ {step}/{len(train_dl)} ]"""
                 msg += f"""[ Image loss: {img_loss:.4f} ]"""
                 msg += f"""[ Text loss: {text_loss:.4f} ]"""
+                # msg += f"""[ Temperature: {clip.temp.data} ]"""
                 print(msg)
 
                 start_time = time()

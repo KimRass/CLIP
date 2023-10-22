@@ -1,27 +1,24 @@
 import torch
 import torch.nn as nn
-from torchvision.models import VisionTransformer, vit_b_32
+from torchvision.models import VisionTransformer
+# from torchvision.models import vit_b_32
 from transformers import DistilBertConfig, DistilBertModel
-from copy import copy
 
 
 class ImageEncoder(nn.Module):
-    # def __init__(self, img_size, patch_size, n_heads, n_layers, img_dim, mlp_dim, embed_dim):
-    def __init__(self, img_size, patch_size, img_dim, mlp_dim, embed_dim):
+    def __init__(self, img_size, patch_size, n_layers, n_heads, hidden_dim, mlp_dim, embed_dim):
         super().__init__()
 
         self.model = VisionTransformer(
             image_size=img_size,
             patch_size=patch_size,
-            # num_heads=n_heads,
-            # num_layers=n_layers,
-            num_heads=12,
-            num_layers=12,
-            hidden_dim=img_dim,
+            num_layers=n_layers,
+            num_heads=n_heads,
+            hidden_dim=hidden_dim,
             mlp_dim=mlp_dim,
         )
         self.model.heads = nn.Identity()
-        self.img_proj = nn.Linear(img_dim, embed_dim)
+        self.img_proj = nn.Linear(hidden_dim, embed_dim)
 
     def forward(self, x):
         x = self.model(x)
@@ -29,21 +26,24 @@ class ImageEncoder(nn.Module):
         return x
 
 
+# "The text encoder is a Transformer with the architecture modifications described in Radford et al. (2019).
+# As a base size we use a 63M-parameter 12-layer 512-wide model with 8 attention heads. For computational efficiency, the max sequence length was capped at 76. The text sequence is bracketed with [SOS] and [EOS] tokens and the activations of the highest layer of the transformer at the [EOS] token are treated as the feature representation of the text which is layer normalized and then linearly projected into the multi-modal embedding space. Masked self-attention was used in the text encoder to preserve"
 class TextEncoder(nn.Module):
-    def __init__(self, max_len, n_heads, n_layers, text_dim, mlp_dim, embed_dim):
+    def __init__(self, vocab_size, max_len, n_layers, n_heads, hidden_dim, mlp_dim, embed_dim):
         super().__init__()
 
         self.model = DistilBertModel(
             DistilBertConfig(
+                vocab_size=vocab_size,
                 max_position_embeddings=max_len,
                 n_heads=n_heads,
                 n_layers=n_layers,
-                dim=text_dim,
+                dim=hidden_dim,
                 hidden_dim=mlp_dim,
                 attention_dropout=0.1,
             )
         )
-        self.text_proj = nn.Linear(text_dim, embed_dim)
+        self.text_proj = nn.Linear(hidden_dim, embed_dim)
 
     def forward(self, x):
         x = self.model(x)

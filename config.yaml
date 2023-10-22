@@ -3,21 +3,28 @@
 
 SEED: 333
 ARCHITECTURE:
-  MLP_DIM: 8192
   DROP_PROB: 0.1
   IMG_ENC:
-    N_LAYERS: 12
-    N_HEADS: 12
-    IMG_SIZE: 224
-    PATCH_SIZE: 16
-    IMG_DIM: 2048
+    IMG_SIZE: 224 # ViT-B/32
+    PATCH_SIZE: 32 # ViT-B/32
+    N_LAYERS: 12 # ViT-B/32
+    N_HEADS: 12 # ViT-B/32
+    HIDDEN_DIM: 768 # ViT-B/32
+    MLP_DIM: 3072 # ViT-B/32
   TEXT_ENC:
-    MAX_LEN: 64
-    TEXT_DIM: 768
+    # "The transformer operates on a lower-cased byte pair encoding (BPE) representation of the text with a
+    # 49,152 vocab size"
+    # 저는 WordPiece 기반의 DisbilBERT tokenizer를 사용하고 vocabulary size 또한 가져가겠습니다.
+    VOCAB_SIZE: 30522
+    MAX_LEN: 64 # Max length of texts in Flickr8k dataset is 44.
+    N_LAYERS: 6 # DistilBERT
+    N_HEADS: 12 # DistilBERT
+    HIDDEN_DIM: 768 # DistilBERT
+    MLP_DIM: 3072 # DistilBERT
   EMBED_DIM: 256
 TRAINING:
-  VOCAB_SIZE: 49_408
-  LR: 0.001
+  # LR: 0.001
+  LR: 0.0005 # "$5 \times 10^{-4}$"
   N_EPOCHS: 32 # "We train all models for 32 epochs."
   MAX_TEMP: 100 # "Maximum temperature"
   WARMUP_STEPS: 2000 # "Warm-up iterations"
