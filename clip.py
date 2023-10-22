@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from pathlib import Path
 
 from utils import load_config
@@ -47,7 +48,7 @@ class CLIP(nn.Module):
             embed_dim=embed_dim,
         )
 
-        # "The learnable temperature parameter was initialized to the equivalent of 0.07."
+        # "The learnable temp parameter was initialized to the equivalent of 0.07."
         self.temp = nn.Parameter(torch.tensor((0.07,)))
 
         self.ce = nn.CrossEntropyLoss()
@@ -55,7 +56,7 @@ class CLIP(nn.Module):
     def _l2_norm(self, x):
         return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
 
-    def get_loss(self, image, token_ids, attn_mask):
+    def get_losses(self, image, token_ids, attn_mask):
         b, _, _, _ = image.shape
 
         img_embed = self.img_enc(image)
@@ -69,12 +70,27 @@ class CLIP(nn.Module):
         # text encoder weights were used."
         # The calculation of embedding similarities was also sharded with individual GPUs computing only the subset
         # of the pairwise similarities necessary for their local batch of embeddings."
-        # logits = torch.matmul(img_embed, text_embed.T) * torch.exp(self.temp)
-        logits = (torch.matmul(img_embed, text_embed.T) + 1) / 2
-        labels = torch.arange(b).to(image.device)
-        img_loss = self.ce(logits, labels) / 2
-        text_loss = self.ce(logits.T, labels) / 2
+        # cos_sim_mat = torch.matmul(img_embed, text_embed.T)
+        # labels = torch.arange(b).to(image.device)
+        # img_loss = self.ce(logits, labels)
+        # text_loss = self.ce(logits.T, labels)
+        logits = (img_embed @ text_embed.T) / self.temp
+        img_sim = img_embed @ img_embed.T
+        text_sim = text_embed @ text_embed.T
+        targets = F.softmax((img_sim + text_sim) / 2 * self.temp, dim=-1)
+        img_loss = cross_entropy(logits, targets, reduction="none")
+        text_loss = cross_entropy(logits.T, targets.T, reduction="none")
         return img_loss, text_loss
+
+
+
+def cross_entropy(preds, targets, reduction="none"):
+    log_softmax = nn.LogSoftmax(dim=-1)
+    loss = (-targets * log_softmax(preds)).sum(1)
+    if reduction == "none":
+        return loss
+    elif reduction == "mean":
+        return loss.mean()
 
 
 if __name__ == "__main__":

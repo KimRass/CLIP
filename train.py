@@ -81,8 +81,8 @@ if __name__ == "__main__":
     optim = AdamW(
         clip.parameters(),
         lr=CONFIG["TRAINING"]["LR"],
-        betas=(CONFIG["OPTIMIZER"]["BETA1"], CONFIG["OPTIMIZER"]["BETA2"]),
-        weight_decay=CONFIG["OPTIMIZER"]["WEIGHT_DECAY"],
+        # betas=(CONFIG["OPTIMIZER"]["BETA1"], CONFIG["OPTIMIZER"]["BETA2"]),
+        # weight_decay=CONFIG["OPTIMIZER"]["WEIGHT_DECAY"],
     )
 
     if DEVICE.type == "cuda":
@@ -104,8 +104,8 @@ if __name__ == "__main__":
                 dtype=torch.float16 if DEVICE.type == "cuda" else torch.bfloat16,
                 enabled=True,
             ):
-                img_loss, text_loss = clip.get_loss(image=image, token_ids=token_ids, attn_mask=attn_mask)
-                tot_loss = img_loss + text_loss
+                img_loss, text_loss = clip.get_losses(image=image, token_ids=token_ids, attn_mask=attn_mask)
+                tot_loss = (img_loss + text_loss) / 2
 
             optim.zero_grad()
             if DEVICE.type == "cuda":
@@ -131,3 +131,17 @@ if __name__ == "__main__":
         msg += f"""[ Text loss: {accum_text_loss / len(train_dl):.4f} ]"""
         # msg += f"""[ Temperature: {clip.temp.data} ]"""
         print(msg)
+
+import torch.nn.functional as F
+batch_size = 4
+dim = 256
+embeddings = torch.randn(batch_size, dim)
+embeddings
+embeddings @ embeddings.T
+out = embeddings @ embeddings.T
+print(F.softmax(out, dim=-1))
+
+input = torch.randn(4, 4, requires_grad=True)
+target = torch.empty(4, dtype=torch.long).random_(5)
+input
+target
