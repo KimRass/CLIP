@@ -131,17 +131,3 @@ if __name__ == "__main__":
         msg += f"""[ Text loss: {accum_text_loss / len(train_dl):.4f} ]"""
         # msg += f"""[ Temperature: {clip.temp.data} ]"""
         print(msg)
-
-import torch.nn.functional as F
-batch_size = 4
-dim = 256
-embeddings = torch.randn(batch_size, dim)
-embeddings
-embeddings @ embeddings.T
-out = embeddings @ embeddings.T
-print(F.softmax(out, dim=-1))
-
-input = torch.randn(4, 4, requires_grad=True)
-target = torch.empty(4, dtype=torch.long).random_(5)
-input
-target
