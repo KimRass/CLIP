@@ -89,8 +89,10 @@ if __name__ == "__main__":
         scaler = GradScaler()
 
     init_epoch = 0
-    start_time = time()
     for epoch in range(init_epoch + 1, CONFIG["TRAINING"]["N_EPOCHS"] + 1):
+        start_time = time()
+        accum_img_loss = 0
+        accum_text_loss = 0
         for step, (image, token_ids, attn_mask) in enumerate(train_dl, start=1):
             image = image.to(DEVICE)
             token_ids = token_ids.to(DEVICE)
@@ -114,18 +116,18 @@ if __name__ == "__main__":
                 tot_loss.backward()
                 optim.step()
 
+            accum_img_loss += img_loss.item()
+            accum_text_loss += text_loss.item()
+
             # "The learnable temperature parameter was clipped to prevent scaling the logits by more than 100
             # which we found necessary to prevent training instability."
             with torch.no_grad():
                 clip.temp.clamp_(max=100)
 
-            # if step % 10 == 0:
         msg = f"[ {get_elapsed_time(start_time)} ]"
         msg += f"""[ {epoch}/{CONFIG["TRAINING"]["N_EPOCHS"]} ]"""
         msg += f"""[ {step}/{len(train_dl)} ]"""
-        msg += f"""[ Image loss: {img_loss:.4f} ]"""
-        msg += f"""[ Text loss: {text_loss:.4f} ]"""
+        msg += f"""[ Image loss: {accum_img_loss / len(train_dl):.4f} ]"""
+        msg += f"""[ Text loss: {accum_text_loss / len(train_dl):.4f} ]"""
         # msg += f"""[ Temperature: {clip.temp.data} ]"""
         print(msg)
-
-        start_time = time()
