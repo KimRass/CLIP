@@ -55,13 +55,13 @@ class CLIP(nn.Module):
     def _l2_norm(self, x):
         return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
 
-    def get_loss(self, image, token_ids):
+    def get_loss(self, image, token_ids, attn_mask):
         b, _, _, _ = image.shape
 
         img_embed = self.img_enc(image)
         img_embed = self._l2_norm(img_embed)
 
-        text_embed = self.text_enc(token_ids)
+        text_embed = self.text_enc(token_ids=token_ids, attn_mask=attn_mask)
         text_embed = self._l2_norm(text_embed)
 
         # "To save additional memory, gradient checkpointing (Griewank & Walther, 2000; Chen et al., 2016),
@@ -74,3 +74,9 @@ class CLIP(nn.Module):
         img_loss = self.ce(logits, labels) / 2
         text_loss = self.ce(logits.T, labels) / 2
         return img_loss, text_loss
+
+
+if __name__ == "__main__":
+    token_ids = torch.randint(0, 100, size=(2, 12))
+    attn_mask = torch.randint(0, 2, size=(2, 12))
+    clip.text_enc(token_ids=token_ids, attn_mask=attn_mask)

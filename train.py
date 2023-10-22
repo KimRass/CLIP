@@ -74,6 +74,7 @@ if __name__ == "__main__":
         text_mlp_dim=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["MLP_DIM"],
         embed_dim=CONFIG["ARCHITECTURE"]["EMBED_DIM"],
     ).to(DEVICE)
+    clip.train()
 
     # "We use the Adam optimizer with decoupled weight decay regularization (Loshchilov & Hutter, 2017) applied to all
     # weights that are not gains or biases, and decay the learning rate using a cosine schedule."
@@ -101,7 +102,7 @@ if __name__ == "__main__":
                 dtype=torch.float16 if DEVICE.type == "cuda" else torch.bfloat16,
                 enabled=True,
             ):
-                img_loss, text_loss = clip.get_loss(image=image, token_ids=token_ids)
+                img_loss, text_loss = clip.get_loss(image=image, token_ids=token_ids, attn_mask=attn_mask)
                 tot_loss = img_loss + text_loss
 
             optim.zero_grad()
@@ -118,14 +119,13 @@ if __name__ == "__main__":
             with torch.no_grad():
                 clip.temp.clamp_(max=100)
 
-            if step % 10 == 0:
-            # if step % 1 == 0:
-                msg = f"[ {get_elapsed_time(start_time)} ]"
-                msg += f"""[ {epoch}/{CONFIG["TRAINING"]["N_EPOCHS"]} ]"""
-                msg += f"""[ {step}/{len(train_dl)} ]"""
-                msg += f"""[ Image loss: {img_loss:.4f} ]"""
-                msg += f"""[ Text loss: {text_loss:.4f} ]"""
-                # msg += f"""[ Temperature: {clip.temp.data} ]"""
-                print(msg)
+            # if step % 10 == 0:
+        msg = f"[ {get_elapsed_time(start_time)} ]"
+        msg += f"""[ {epoch}/{CONFIG["TRAINING"]["N_EPOCHS"]} ]"""
+        msg += f"""[ {step}/{len(train_dl)} ]"""
+        msg += f"""[ Image loss: {img_loss:.4f} ]"""
+        msg += f"""[ Text loss: {text_loss:.4f} ]"""
+        # msg += f"""[ Temperature: {clip.temp.data} ]"""
+        print(msg)
 
-                start_time = time()
+        start_time = time()

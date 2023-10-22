@@ -45,20 +45,8 @@ class TextEncoder(nn.Module):
         )
         self.text_proj = nn.Linear(hidden_dim, embed_dim)
 
-    def forward(self, x):
-        x = self.model(x)
+    def forward(self, token_ids, attn_mask):
+        x = self.model(input_ids=token_ids, attention_mask=attn_mask)
         x = x.last_hidden_state[:, 0, :]
         x = self.text_proj(x)
         return x
-
-
-if __name__ == "__main__":
-    img_enc = ImageEncoder()
-    image = torch.randn((4, 3, 224, 224))
-    img_embed = img_enc.encode_img(image)
-    img_embed.shape
-
-    text_enc = TextEncoder()
-    token_ids = torch.randint(100, size=(4, 32))
-    text_embed = text_enc.encode_text(token_ids)
-    text_embed.shape
