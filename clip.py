@@ -69,7 +69,8 @@ class CLIP(nn.Module):
         # text encoder weights were used."
         # The calculation of embedding similarities was also sharded with individual GPUs computing only the subset
         # of the pairwise similarities necessary for their local batch of embeddings."
-        logits = torch.matmul(img_embed, text_embed.T) * torch.exp(self.temp)
+        # logits = torch.matmul(img_embed, text_embed.T) * torch.exp(self.temp)
+        logits = (torch.matmul(img_embed, text_embed.T) + 1) / 2
         labels = torch.arange(b).to(image.device)
         img_loss = self.ce(logits, labels) / 2
         text_loss = self.ce(logits.T, labels) / 2
