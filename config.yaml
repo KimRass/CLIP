@@ -23,8 +23,8 @@ ARCHITECTURE:
     MLP_DIM: 3072 # DistilBERT
   EMBED_DIM: 256
 TRAINING:
-  # LR: 0.001
-  LR: 0.0005 # "$5 \times 10^{-4}$"
+  LR: 0.001
+  # LR: 0.0005 # "$5 \times 10^{-4}$"
   N_EPOCHS: 32 # "We train all models for 32 epochs."
   MAX_TEMP: 100 # "Maximum temperature"
   WARMUP_STEPS: 2000 # "Warm-up iterations"
