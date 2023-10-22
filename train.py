@@ -10,7 +10,7 @@ from pathlib import Path
 import wandb
 
 from utils import load_config, get_device, get_elapsed_time
-from flickr import Flickr8kDataset
+from flickr import Flickr8kDataset, DataCollatorForDynamicPadding
 from tokenizer import load_tokenizer
 from clip import CLIP
 
@@ -25,6 +25,7 @@ def get_args():
 
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--n_cpus", type=int, required=True)
+    # "We use a very large minibatch size of 32,768."
     parser.add_argument("--batch_size", type=int, required=False, default=32_768)
     parser.add_argument("--resume_from", type=str, required=False)
 
@@ -44,8 +45,8 @@ if __name__ == "__main__":
         # data_dir="/Users/jongbeomkim/Documents/datasets/flickr8k",
         data_dir=args.data_dir,
         tokenizer=tokenizer,
-        max_len=64,
     )
+    collator = DataCollatorForDynamicPadding(tokenizer=tokenizer)
     train_dl = DataLoader(
         flickr,
         batch_size=args.batch_size,
@@ -55,6 +56,7 @@ if __name__ == "__main__":
         # num_workers=0,
         pin_memory=True,
         drop_last=True,
+        collate_fn=collator,
     )
 
     clip = CLIP(
@@ -68,6 +70,7 @@ if __name__ == "__main__":
         embed_dim=CONFIG["ARCHITECTURE"]["EMBED_DIM"],
         mlp_dim=CONFIG["ARCHITECTURE"]["MLP_DIM"],
     ).to(DEVICE)
+    clip
 
     # "For the Vision Transformers we train a ViT-B/32, a ViT-B/16, and a ViT-L/14. We use the Adam optimizer (Kingma & Ba, 2014) with decoupled weight decay regularization (Loshchilov & Hutter, 2017) applied to all weights that are not gains
     # or biases, and decay the learning rate using a cosine schedule (Loshchilov & Hutter, 2016). Initial"
@@ -83,10 +86,12 @@ if __name__ == "__main__":
     init_epoch = 0
     for epoch in range(init_epoch + 1, CONFIG["TRAINING"]["N_EPOCHS"] + 1):
         start_time = time()
-        for step, (image, token_ids) in enumerate(train_dl, start=1):
+        for step, (image, token_ids, attn_mask) in enumerate(train_dl, start=1):
             image = image.to(DEVICE)
             token_ids = token_ids.to(DEVICE)
+            attn_mask = attn_mask.to(DEVICE)
 
+            # "Mixed-precision was used to accelerate training and save memory."
             with torch.autocast(
                 device_type=DEVICE.type,
                 dtype=torch.float16 if DEVICE.type == "cuda" else torch.bfloat16,

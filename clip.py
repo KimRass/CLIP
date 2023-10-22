@@ -57,15 +57,12 @@ class CLIP(nn.Module):
 
         img_embed = self.img_enc(image)
         img_embed = self._l2_norm(img_embed)
-        # return img_embed
 
         text_embed = self.text_enc(token_ids)
         text_embed = self._l2_norm(text_embed)
 
-        # "We use a very large minibatch size of 32,768."
-        # "Mixed-precision was used to accelerate training and save memory. To save additional memory, gradient
-        # checkpointing (Griewank & Walther, 2000; Chen et al., 2016), half-precision Adam statistics (Dhariwal et al., 2020), and half-precision stochastically rounded text encoder weights were used."
-        # The calculation of embedding similarities was also sharded with individual GPUs computing only the subset of the pairwise similarities necessary for their local batch of embeddings. T"
+        # "To save additional memory, gradient checkpointing (Griewank & Walther, 2000; Chen et al., 2016), half-precision Adam statistics (Dhariwal et al., 2020), and half-precision stochastically rounded text encoder weights were used."
+        # The calculation of embedding similarities was also sharded with individual GPUs computing only the subset of the pairwise similarities necessary for their local batch of embeddings."
         logits = torch.matmul(img_embed, text_embed.T) * torch.exp(self.temp)
         labels = torch.arange(b).to(image.device)
         img_loss = self.ce(logits, labels) / 2
