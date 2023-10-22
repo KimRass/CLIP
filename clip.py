@@ -80,9 +80,9 @@ class CLIP(nn.Module):
         targets = F.softmax((img_sim + text_sim) / 2 * self.temp, dim=-1)
         img_loss = cross_entropy(logits, targets, reduction="none")
         text_loss = cross_entropy(logits.T, targets.T, reduction="none")
-        print(img_loss)
-        print(text_loss)
-        return img_loss, text_loss
+        # print(img_loss)
+        # print(text_loss)
+        return img_loss.mean(), text_loss.mean()
 
 
 def cross_entropy(preds, targets, reduction="none"):
