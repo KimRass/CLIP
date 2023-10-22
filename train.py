@@ -63,8 +63,8 @@ if __name__ == "__main__":
         img_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
         patch_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["PATCH_SIZE"],
         max_len=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["MAX_LEN"],
-        n_heads=CONFIG["ARCHITECTURE"]["N_HEADS"],
-        n_layers=CONFIG["ARCHITECTURE"]["N_LAYERS"],
+        # n_heads=CONFIG["ARCHITECTURE"]["N_HEADS"],
+        # n_layers=CONFIG["ARCHITECTURE"]["N_LAYERS"],
         img_dim=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_DIM"],
         text_dim=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["TEXT_DIM"],
         embed_dim=CONFIG["ARCHITECTURE"]["EMBED_DIM"],
@@ -84,8 +84,8 @@ if __name__ == "__main__":
     scaler = GradScaler()
 
     init_epoch = 0
+    start_time = time()
     for epoch in range(init_epoch + 1, CONFIG["TRAINING"]["N_EPOCHS"] + 1):
-        start_time = time()
         for step, (image, token_ids, attn_mask) in enumerate(train_dl, start=1):
             image = image.to(DEVICE)
             token_ids = token_ids.to(DEVICE)
@@ -106,10 +106,12 @@ if __name__ == "__main__":
 
             scaler.update()
 
-            if step % 1 == 0:
+            if step % 10 == 0:
                 msg = f"[ {get_elapsed_time(start_time)} ]"
                 msg += f"""[ {epoch}/{CONFIG["TRAINING"]["N_EPOCHS"]} ]"""
                 msg += f"""[ {step}/{len(train_dl)} ]"""
                 msg += f"""[ Image loss: {img_loss:.4f} ]"""
                 msg += f"""[ Text loss: {text_loss:.4f} ]"""
                 print(msg)
+
+                start_time = time()

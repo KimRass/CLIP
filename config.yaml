@@ -1,30 +1,28 @@
+# References:
+  # https://github.com/moein-shariatnia/OpenAI-CLIP
+
 SEED: 333
 ARCHITECTURE:
-  N_LAYERS: 6
-  MLP_DIM: 3072
-  # MLP_DIM: 768
-  N_LAYERS: 12
-  N_HEADS: 12
+  MLP_DIM: 8192
   DROP_PROB: 0.1
   IMG_ENC:
+    N_LAYERS: 12
+    N_HEADS: 12
     IMG_SIZE: 224
     PATCH_SIZE: 16
-    IMG_DIM: 768
-    # IMG_DIM: 192
+    IMG_DIM: 2048
   TEXT_ENC:
     MAX_LEN: 64
     TEXT_DIM: 768
-    # TEXT_DIM: 192
-  # EMBED_DIM: 192
   EMBED_DIM: 256
 TRAINING:
   VOCAB_SIZE: 49_408
-  LR: 0.0002 # ?
+  LR: 0.001
   N_EPOCHS: 32 # "We train all models for 32 epochs."
-  # N_TEMP: 100
-  WARMUP_STEPS: 2000
+  MAX_TEMP: 100 # "Maximum temperature"
+  WARMUP_STEPS: 2000 # "Warm-up iterations"
 OPTIMIZER:
   BETA1: 0.9
   BETA2: 0.98
-  EPS: 0.000001
-  WEIGHT_DECAY: 0.2
+  EPS: 0.000001 # "Adam $\epsilon"
+  WEIGHT_DECAY: 0.2 # "Weight decay"

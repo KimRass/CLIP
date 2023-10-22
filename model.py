@@ -1,19 +1,22 @@
 import torch
 import torch.nn as nn
-from torchvision.models import VisionTransformer
+from torchvision.models import VisionTransformer, vit_b_32
 from transformers import DistilBertConfig, DistilBertModel
 from copy import copy
 
 
 class ImageEncoder(nn.Module):
-    def __init__(self, img_size, patch_size, n_heads, n_layers, img_dim, mlp_dim, embed_dim):
+    # def __init__(self, img_size, patch_size, n_heads, n_layers, img_dim, mlp_dim, embed_dim):
+    def __init__(self, img_size, patch_size, img_dim, mlp_dim, embed_dim):
         super().__init__()
 
         self.model = VisionTransformer(
             image_size=img_size,
             patch_size=patch_size,
-            num_heads=n_heads,
-            num_layers=n_layers,
+            # num_heads=n_heads,
+            # num_layers=n_layers,
+            num_heads=12,
+            num_layers=12,
             hidden_dim=img_dim,
             mlp_dim=mlp_dim,
         )
