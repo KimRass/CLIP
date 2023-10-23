@@ -93,37 +93,21 @@ class CLIP(nn.Module):
         # text_loss = self.ce(logits.T, labels)
 
 
-# def _l2_norm( x):
-#     return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
-# img_embed = torch.randn(4, 256)
-# text_embed = torch.randn(4, 256)
-# logits = (img_embed @ text_embed.T)
-# labels = torch.arange(4)
-# logits
-# labels
-# img_loss = nn.CrossEntropyLoss()(logits, labels)
-# text_loss = nn.CrossEntropyLoss()(logits.T, labels)
-# img_loss, text_loss
-# logits = (img_embed @ text_embed.T)
-# img_sim = img_embed @ img_embed.T
-# text_sim = text_embed @ text_embed.T
-# targets = F.softmax((img_sim + text_sim) / 2, dim=-1)
-# img_loss = (-targets * nn.LogSoftmax(dim=-1)(logits)).sum(dim=1)
-# img_loss
-
-# nn.LogSoftmax(dim=-1)(logits)
-
-
-
 if __name__ == "__main__":
-    token_ids = torch.randint(0, 100, size=(2, 12))
-    attn_mask = torch.randint(0, 2, size=(2, 12))
-    clip.text_enc(token_ids=token_ids, attn_mask=attn_mask)
-
-    nn.Cross
-    b = 5
-    label = (torch.eye(5) * 2) - 1
-    F.softmax(label, dim=1)
-
-    cos_sim_mat = torch.rand(5, 5)
-    (cos_sim_mat + 1) / 2
+    # def _l2_norm( x):
+#     return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
+    # img_embed = torch.randn(4, 256)
+    # text_embed = torch.randn(4, 256)
+    # logits = (img_embed @ text_embed.T)
+    # labels = torch.arange(4)
+    # logits
+    # labels
+    # img_loss = nn.CrossEntropyLoss()(logits, labels)
+    # text_loss = nn.CrossEntropyLoss()(logits.T, labels)
+    # img_loss, text_loss
+    # logits = (img_embed @ text_embed.T)
+    # img_sim = img_embed @ img_embed.T
+    # text_sim = text_embed @ text_embed.T
+    # targets = F.softmax((img_sim + text_sim) / 2, dim=-1)
+    # img_loss = (-targets * nn.LogSoftmax(dim=-1)(logits)).sum(dim=1)
+    # img_loss

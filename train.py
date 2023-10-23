@@ -5,7 +5,6 @@ from torch.cuda.amp import GradScaler
 from transformers import DistilBertTokenizerFast
 import argparse
 from time import time
-from tqdm import tqdm
 from pathlib import Path
 import wandb
 
@@ -18,6 +17,8 @@ from clip import CLIP
 CONFIG = load_config(Path(__file__).parent/"config.yaml")
 
 DEVICE = get_device()
+
+PARENT_DIR = Path(__file__).resolve().parent
 
 
 def get_args():
@@ -83,6 +84,21 @@ def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
     return img_loss, text_loss
 
 
+def save_checkpoint(epoch, clip, optim, scaler, save_path):
+    Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+    state_dict = {
+        "epoch": epoch,
+        "image_encoder": clip.img_enc.state_dict(),
+        "text_encoder": clip.text_enc.state_dict(),
+        "temperature": clip.temp.item(),
+        "optimizer": optim.state_dict(),
+    }
+    if scaler is not None:
+        state_dict["scaler"] = scaler.state_dict()
+    torch.save(state_dict, str(save_path))
+    # wandb.save(str(save_path), base_path=Path(save_path).parent)
+
+
 if __name__ == "__main__":
     args = get_args()
 
@@ -91,19 +107,13 @@ if __name__ == "__main__":
 
     tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
 
-    flickr = Flickr8kDataset(
-        # data_dir="/Users/jongbeomkim/Documents/datasets/flickr8k",
-        data_dir=args.data_dir,
-        tokenizer=tokenizer,
-    )
+    flickr = Flickr8kDataset(data_dir=args.data_dir, tokenizer=tokenizer)
     collator = DataCollatorForDynamicPadding(tokenizer=tokenizer)
     train_dl = DataLoader(
         flickr,
         batch_size=args.batch_size,
-        # batch_size=4,
         shuffle=True,
         num_workers=args.n_cpus,
-        # num_workers=0,
         pin_memory=True,
         drop_last=True,
         collate_fn=collator,
@@ -139,10 +149,29 @@ if __name__ == "__main__":
             accum_img_loss += img_loss.item()
             accum_text_loss += text_loss.item()
 
+        accum_img_loss /= len(train_dl)
+        accum_text_loss /= len(train_dl)
+
         msg = f"[ {get_elapsed_time(start_time)} ]"
         msg += f"""[ {epoch}/{CONFIG["TRAINING"]["N_EPOCHS"]} ]"""
-        msg += f"""[ {step}/{len(train_dl)} ]"""
-        msg += f"""[ Image loss: {accum_img_loss / len(train_dl):.4f} ]"""
-        msg += f"""[ Text loss: {accum_text_loss / len(train_dl):.4f} ]"""
-        # msg += f"""[ Temperature: {clip.temp.data} ]"""
+        msg += f"""[ Image loss: {accum_img_loss:.4f} ]"""
+        msg += f"""[ Text loss: {accum_text_loss:.4f} ]"""
+        msg += f"""[ Temperature: {clip.temp.item()} ]"""
         print(msg)
+
+        wandb.log(
+            {
+                "Image loss": accum_img_loss,
+                "Text loss": accum_text_loss,
+                "Temperature": clip.temp.item(),
+            },
+            step=epoch,
+        )
+
+        save_checkpoint(
+            epoch=epoch,
+            clip=clip,
+            optim=optim,
+            scaler=scaler,
+            save_path=PARENT_DIR/f"checkpoints/epoch_{epoch}.pth",
+        )
