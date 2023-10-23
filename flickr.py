@@ -52,15 +52,15 @@ class Flickr8kDataset(Dataset):
                     if img_path in self.img_paths:
                         self.captions[img_path].append(text)
 
-        for img_path, texts in self.captions.items():
-            ls_token_ids = _encode(texts, tokenizer=self.tokenizer)
-            self.captions[img_path] = ls_token_ids
+        # for img_path, texts in self.captions.items():
+        #     ls_token_ids = _encode(texts, tokenizer=self.tokenizer)
+        #     self.captions[img_path] = ls_token_ids
 
-            for token_ids in ls_token_ids:
-                token_ids_len = len(token_ids)
-                if token_ids_len > self.max_len:
-                    self.max_len = token_ids_len
-        print(f"The maximum length of token IDs is {self.max_len:,}.")
+        #     for token_ids in ls_token_ids:
+        #         token_ids_len = len(token_ids)
+        #         if token_ids_len > self.max_len:
+        #             self.max_len = token_ids_len
+        # print(f"The maximum length of token IDs is {self.max_len:,}.")
 
     def __len__(self):
         return len(self.captions)
@@ -70,8 +70,11 @@ class Flickr8kDataset(Dataset):
         image = Image.open(img_path)
         image = self.transforms(image)
 
-        ls_token_ids = self.captions[img_path]
-        token_ids = random.choice(ls_token_ids)
+        # ls_token_ids = self.captions[img_path]
+        # token_ids = random.choice(ls_token_ids)
+        texts = self.captions[img_path]
+        text = random.choice(texts)
+        token_ids = _encode(text, tokenizer=self.tokenizer)
         return image, token_ids
 
 
