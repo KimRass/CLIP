@@ -71,7 +71,8 @@ class CLIP(nn.Module):
         # text encoder weights were used."
         # The calculation of embedding similarities was also sharded with individual GPUs computing only the subset
         # of the pairwise similarities necessary for their local batch of embeddings."
-        # cos_sim_mat = torch.matmul(img_embed, text_embed.T)
+        # cos_sim_mat = torch.matmul(img_embed, text_embed.T) # $[-1, 1]$
+        # temp = (cos_sim_mat + 1) / 2 # $[0, 1]$
         # labels = torch.arange(b).to(image.device)
         # img_loss = self.ce(logits, labels)
         # text_loss = self.ce(logits.T, labels)
@@ -89,3 +90,11 @@ if __name__ == "__main__":
     token_ids = torch.randint(0, 100, size=(2, 12))
     attn_mask = torch.randint(0, 2, size=(2, 12))
     clip.text_enc(token_ids=token_ids, attn_mask=attn_mask)
+
+    nn.Cross
+    b = 5
+    label = (torch.eye(5) * 2) - 1
+    F.softmax(label, dim=1)
+
+    cos_sim_mat = torch.rand(5, 5)
+    (cos_sim_mat + 1) / 2
