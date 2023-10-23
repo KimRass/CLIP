@@ -93,9 +93,9 @@ class CLIP(nn.Module):
         # text_loss = self.ce(logits.T, labels)
 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     # def _l2_norm( x):
-#     return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
+        # return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
     # img_embed = torch.randn(4, 256)
     # text_embed = torch.randn(4, 256)
     # logits = (img_embed @ text_embed.T)
