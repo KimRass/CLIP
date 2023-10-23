@@ -51,7 +51,7 @@ class CLIP(nn.Module):
         # "The learnable temp parameter was initialized to the equivalent of 0.07."
         self.temp = nn.Parameter(torch.tensor((0.07,)))
 
-        # self.ce = nn.CrossEntropyLoss()
+        self.ce = nn.CrossEntropyLoss()
         self.log_softmax = nn.LogSoftmax(dim=-1)
 
     def _l2_norm(self, x):
@@ -71,11 +71,12 @@ class CLIP(nn.Module):
         # text encoder weights were used."
         # The calculation of embedding similarities was also sharded with individual GPUs computing only the subset
         # of the pairwise similarities necessary for their local batch of embeddings."
-        # cos_sim_mat = torch.matmul(img_embed, text_embed.T) # $[-1, 1]$
-        # temp = (cos_sim_mat + 1) / 2 # $[0, 1]$
+        # cos_sim_mat = img_embed @ text_embed.T # $[-1, 1]$
+        # mat = (cos_sim_mat + 1) / 2 # $[0, 1]$
         # labels = torch.arange(b).to(image.device)
         # img_loss = self.ce(logits, labels)
         # text_loss = self.ce(logits.T, labels)
+
         logits = (img_embed @ text_embed.T) / self.temp
         img_sim = img_embed @ img_embed.T
         text_sim = text_embed @ text_embed.T
