@@ -27,7 +27,7 @@ def get_args():
     parser.add_argument("--n_cpus", type=int, required=True)
     # "We use a very large minibatch size of 32,768."
     parser.add_argument("--batch_size", type=int, required=False, default=32_768)
-    parser.add_argument("--resume_from", type=str, required=False)
+    parser.add_argument("--run_id", type=str, required=False)
 
     args = parser.parse_args()
     return args
@@ -86,8 +86,8 @@ def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
 if __name__ == "__main__":
     args = get_args()
 
-    # wandb.init(project="CLIP")
-    # wandb.config.update(CONFIG)
+    wandb.init(project="CLIP", resume=args.run_id)
+    wandb.config.update(CONFIG, allow_val_change=True)
 
     tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
 

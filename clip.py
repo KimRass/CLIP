@@ -1,3 +1,9 @@
+# "To save additional memory, gradient checkpointing (Griewank & Walther, 2000; Chen et al., 2016),
+# half-precision Adam statistics (Dhariwal et al., 2020), and half-precision stochastically rounded
+# text encoder weights were used."
+# The calculation of embedding similarities was also sharded with individual GPUs computing only the subset
+# of the pairwise similarities necessary for their local batch of embeddings."
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -61,30 +67,36 @@ class CLIP(nn.Module):
         b, _, _, _ = image.shape
 
         img_embed = self.img_enc(image)
-        img_embed = self._l2_norm(img_embed)
-
         text_embed = self.text_enc(token_ids=token_ids, attn_mask=attn_mask)
-        text_embed = self._l2_norm(text_embed)
 
-        # "To save additional memory, gradient checkpointing (Griewank & Walther, 2000; Chen et al., 2016),
-        # half-precision Adam statistics (Dhariwal et al., 2020), and half-precision stochastically rounded
-        # text encoder weights were used."
-        # The calculation of embedding similarities was also sharded with individual GPUs computing only the subset
-        # of the pairwise similarities necessary for their local batch of embeddings."
+        img_sim = img_embed @ img_embed.T
+        print(img_sim)
+
+        logits = (img_embed @ text_embed.T) / self.temp
+        img_sim = img_embed @ img_embed.T
+        text_sim = text_embed @ text_embed.T
+        targets = F.softmax((img_sim + text_sim) / 2 * self.temp, dim=-1)
+        img_loss = (-targets * self.log_softmax(logits)).sum(dim=1)
+        text_loss = (-targets.T * self.log_softmax(logits.T)).sum(dim=1)
+        return img_loss.mean(), text_loss.mean()
+
+        # img_embed = self._l2_norm(img_embed)
+        # text_embed = self._l2_norm(text_embed)
+
         # cos_sim_mat = img_embed @ text_embed.T # $[-1, 1]$
         # mat = (cos_sim_mat + 1) / 2 # $[0, 1]$
         # labels = torch.arange(b).to(image.device)
         # img_loss = self.ce(logits, labels)
         # text_loss = self.ce(logits.T, labels)
 
-        logits = (img_embed @ text_embed.T) / self.temp
-        img_sim = img_embed @ img_embed.T
-        text_sim = text_embed @ text_embed.T
-        targets = F.softmax((img_sim + text_sim) / 2 * self.temp, dim=-1)
-        print(img_sim, text_sim, targets)
-        img_loss = (-targets * self.log_softmax(logits)).sum(dim=1)
-        text_loss = (-targets.T * self.log_softmax(logits.T)).sum(dim=1)
-        return img_loss.mean(), text_loss.mean()
+
+# def _l2_norm( x):
+#     return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
+# img_embed = torch.randn(4, 256)
+# # img_embed = _l2_norm(img_embed)
+# img_sim = img_embed @ img_embed.T
+# img_sim
+
 
 
 if __name__ == "__main__":
