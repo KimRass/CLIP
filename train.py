@@ -8,10 +8,9 @@ from time import time
 from pathlib import Path
 import wandb
 
-from utils import load_config, get_device, get_elapsed_time
+from utils import load_config, get_device, get_elapsed_time, get_clip
 from flickr import Flickr8kDataset, DataCollatorForDynamicPadding
 from tokenizer import load_tokenizer
-from clip import CLIP
 
 # CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/CONFIG.yaml")
 CONFIG = load_config(Path(__file__).parent/"config.yaml")
@@ -32,26 +31,6 @@ def get_args():
 
     args = parser.parse_args()
     return args
-
-
-def get_clip():
-    clip = CLIP(
-        img_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
-        patch_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["PATCH_SIZE"],
-        img_n_layers=CONFIG["ARCHITECTURE"]["IMG_ENC"]["N_LAYERS"],
-        img_n_heads=CONFIG["ARCHITECTURE"]["IMG_ENC"]["N_HEADS"],
-        img_hidden_dim=CONFIG["ARCHITECTURE"]["IMG_ENC"]["HIDDEN_DIM"],
-        img_mlp_dim=CONFIG["ARCHITECTURE"]["IMG_ENC"]["MLP_DIM"],
-        vocab_size=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["VOCAB_SIZE"],
-        max_len=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["MAX_LEN"],
-        text_n_layers=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["N_LAYERS"],
-        text_n_heads=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["N_HEADS"],
-        text_hidden_dim=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["HIDDEN_DIM"],
-        text_mlp_dim=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["MLP_DIM"],
-        embed_dim=CONFIG["ARCHITECTURE"]["EMBED_DIM"],
-    ).to(DEVICE)
-    clip.train()
-    return clip
 
 
 def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
@@ -119,7 +98,7 @@ if __name__ == "__main__":
         collate_fn=collator,
     )
 
-    clip = get_clip()
+    clip = get_clip(config=CONFIG, device=DEVICE)
 
     # "We use the Adam optimizer with decoupled weight decay regularization (Loshchilov & Hutter, 2017) applied to all
     # weights that are not gains or biases, and decay the learning rate using a cosine schedule."
@@ -156,7 +135,7 @@ if __name__ == "__main__":
         msg += f"""[ {epoch}/{CONFIG["TRAINING"]["N_EPOCHS"]} ]"""
         msg += f"""[ Image loss: {accum_img_loss:.4f} ]"""
         msg += f"""[ Text loss: {accum_text_loss:.4f} ]"""
-        msg += f"""[ Temperature: {clip.temp.item()} ]"""
+        msg += f"""[ Temperature: {clip.temp.item():.4f} ]"""
         print(msg)
 
         wandb.log(
@@ -168,10 +147,11 @@ if __name__ == "__main__":
             step=epoch,
         )
 
-        save_checkpoint(
-            epoch=epoch,
-            clip=clip,
-            optim=optim,
-            scaler=scaler,
-            save_path=PARENT_DIR/f"checkpoints/epoch_{epoch}.pth",
-        )
+        if epoch == 10:
+            save_checkpoint(
+                epoch=epoch,
+                clip=clip,
+                optim=optim,
+                scaler=scaler,
+                save_path=PARENT_DIR/f"checkpoints/epoch_{epoch}.pth",
+            )
