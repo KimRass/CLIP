@@ -51,7 +51,8 @@ class CLIP(nn.Module):
         # "The learnable temp parameter was initialized to the equivalent of 0.07."
         self.temp = nn.Parameter(torch.tensor((0.07,)))
 
-        self.ce = nn.CrossEntropyLoss()
+        # self.ce = nn.CrossEntropyLoss()
+        self.log_softmax = nn.LogSoftmax(dim=-1)
 
     def _l2_norm(self, x):
         return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
@@ -78,20 +79,10 @@ class CLIP(nn.Module):
         img_sim = img_embed @ img_embed.T
         text_sim = text_embed @ text_embed.T
         targets = F.softmax((img_sim + text_sim) / 2 * self.temp, dim=-1)
-        img_loss = cross_entropy(logits, targets, reduction="none")
-        text_loss = cross_entropy(logits.T, targets.T, reduction="none")
-        # print(img_loss)
-        # print(text_loss)
+        print(img_sim, text_sim, targets)
+        img_loss = (-targets * self.log_softmax(logits)).sum(dim=1)
+        text_loss = (-targets.T * self.log_softmax(logits.T)).sum(dim=1)
         return img_loss.mean(), text_loss.mean()
-
-
-def cross_entropy(preds, targets, reduction="none"):
-    log_softmax = nn.LogSoftmax(dim=-1)
-    loss = (-targets * log_softmax(preds)).sum(1)
-    if reduction == "none":
-        return loss
-    elif reduction == "mean":
-        return loss.mean()
 
 
 if __name__ == "__main__":
