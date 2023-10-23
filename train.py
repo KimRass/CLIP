@@ -8,10 +8,10 @@ from time import time
 from pathlib import Path
 import wandb
 
-from utils import load_config, get_device, get_elapsed_time, get_clip
+from utils import load_config, get_device, get_elapsed_time
 from flickr import Flickr8kDataset, DataCollatorForDynamicPadding
+from clip import CLIP
 from tokenizer import load_tokenizer
-
 # CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/CONFIG.yaml")
 CONFIG = load_config(Path(__file__).parent/"config.yaml")
 
@@ -31,6 +31,26 @@ def get_args():
 
     args = parser.parse_args()
     return args
+
+
+def get_clip(config, device):
+    clip = CLIP(
+        img_size=config["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
+        patch_size=config["ARCHITECTURE"]["IMG_ENC"]["PATCH_SIZE"],
+        img_n_layers=config["ARCHITECTURE"]["IMG_ENC"]["N_LAYERS"],
+        img_n_heads=config["ARCHITECTURE"]["IMG_ENC"]["N_HEADS"],
+        img_hidden_dim=config["ARCHITECTURE"]["IMG_ENC"]["HIDDEN_DIM"],
+        img_mlp_dim=config["ARCHITECTURE"]["IMG_ENC"]["MLP_DIM"],
+        vocab_size=config["ARCHITECTURE"]["TEXT_ENC"]["VOCAB_SIZE"],
+        max_len=config["ARCHITECTURE"]["TEXT_ENC"]["MAX_LEN"],
+        text_n_layers=config["ARCHITECTURE"]["TEXT_ENC"]["N_LAYERS"],
+        text_n_heads=config["ARCHITECTURE"]["TEXT_ENC"]["N_HEADS"],
+        text_hidden_dim=config["ARCHITECTURE"]["TEXT_ENC"]["HIDDEN_DIM"],
+        text_mlp_dim=config["ARCHITECTURE"]["TEXT_ENC"]["MLP_DIM"],
+        embed_dim=config["ARCHITECTURE"]["EMBED_DIM"],
+    ).to(device)
+    clip.train()
+    return clip
 
 
 def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
