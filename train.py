@@ -78,8 +78,8 @@ def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
 
     # "The learnable temperature parameter was clipped to prevent scaling the logits by more than 100
     # which we found necessary to prevent training instability."
-    with torch.no_grad():
-        clip.temp.clamp_(max=100)
+    # with torch.no_grad():
+    #     clip.temp.clamp_(max=100)
     return img_loss, text_loss
 
 
