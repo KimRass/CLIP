@@ -69,45 +69,67 @@ class CLIP(nn.Module):
         img_embed = self.img_enc(image)
         text_embed = self.text_enc(token_ids=token_ids, attn_mask=attn_mask)
 
-        logits = (img_embed @ text_embed.T) / self.temp
-        labels = torch.arange(b).to(image.device)
-        img_loss = self.ce(logits, labels) / 2
-        text_loss = self.ce(logits.T, labels) / 2
-        return img_loss, text_loss
-
         # logits = (img_embed @ text_embed.T) / self.temp
-        # img_sim = img_embed @ img_embed.T
-        # text_sim = text_embed @ text_embed.T
-        # targets = F.softmax((img_sim + text_sim) / 2 * self.temp, dim=-1)
-        # img_loss = (-targets * self.log_softmax(logits)).sum(dim=1)
-        # text_loss = (-targets.T * self.log_softmax(logits.T)).sum(dim=1)
-        # return img_loss.mean(), text_loss.mean()
-
-        # img_embed = self._l2_norm(img_embed)
-        # text_embed = self._l2_norm(text_embed)
-
-        # cos_sim_mat = img_embed @ text_embed.T # $[-1, 1]$
-        # mat = (cos_sim_mat + 1) / 2 # $[0, 1]$
         # labels = torch.arange(b).to(image.device)
-        # img_loss = self.ce(logits, labels)
-        # text_loss = self.ce(logits.T, labels)
+        # img_loss = self.ce(logits, labels) / 2
+        # text_loss = self.ce(logits.T, labels) / 2
+        # return img_loss, text_loss
+
+        logits = (img_embed @ text_embed.T) / self.temp
+        img_sim = img_embed @ img_embed.T
+        text_sim = text_embed @ text_embed.T
+        targets = F.softmax((img_sim + text_sim) / 2 * self.temp, dim=-1)
+        img_loss = (-targets * self.log_softmax(logits)).sum(dim=1)
+        text_loss = (-targets.T * self.log_softmax(logits.T)).sum(dim=1)
+        return img_loss.mean(), text_loss.mean()
 
 
-# if __name__ == "__main__":
-    # def _l2_norm( x):
-        # return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
-    # img_embed = torch.randn(4, 256)
-    # text_embed = torch.randn(4, 256)
-    # logits = (img_embed @ text_embed.T)
-    # labels = torch.arange(4)
-    # logits
-    # labels
-    # img_loss = nn.CrossEntropyLoss()(logits, labels)
-    # text_loss = nn.CrossEntropyLoss()(logits.T, labels)
-    # img_loss, text_loss
-    # logits = (img_embed @ text_embed.T)
-    # img_sim = img_embed @ img_embed.T
-    # text_sim = text_embed @ text_embed.T
-    # targets = F.softmax((img_sim + text_sim) / 2, dim=-1)
-    # img_loss = (-targets * nn.LogSoftmax(dim=-1)(logits)).sum(dim=1)
-    # img_loss
+if __name__ == "__main__":
+    def _l2_norm( x):
+        return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
+    img_embed = torch.randn(4, 256)
+    text_embed = torch.randn(4, 256)
+
+    F.cosine_similarity(img_embed, text_embed, dim=1)
+    F.cosi
+
+    img_embed = _l2_norm(img_embed)
+    text_embed = _l2_norm(text_embed)
+
+    logits = (img_embed @ text_embed.T)
+    labels = -torch.ones_like(logits)
+    labels.fill_diagonal_(1)
+
+    logits
+    labels
+    F.softmax(labels)
+
+    nn.CrossEntropyLoss()(logits, labels)
+
+    labels = torch.arange(4)
+    logits
+    labels
+    img_loss = nn.CrossEntropyLoss()(logits, labels)
+    text_loss = nn.CrossEntropyLoss()(logits.T, labels)
+    img_loss, text_loss
+    logits = (img_embed @ text_embed.T)
+    img_sim = img_embed @ img_embed.T
+    text_sim = text_embed @ text_embed.T
+    targets = F.softmax((img_sim + text_sim) / 2, dim=-1)
+    img_loss = (-targets * nn.LogSoftmax(dim=-1)(logits)).sum(dim=1)
+    img_loss
+
+
+    BATCH_SIZE = 2
+    TEMPERATURE = 0.1
+    x = torch.randn(4, 256)
+    cos_sim_mat = F.cosine_similarity(x.unsqueeze(1), x.unsqueeze(0), dim=2)
+    mat = torch.exp(cos_sim_mat / TEMPERATURE)
+    mat.fill_diagonal_(0)
+
+    
+    torch.diag(mat, -BATCH_SIZE)
+    numer = torch.cat([torch.diag(mat, -BATCH_SIZE), torch.diag(mat, BATCH_SIZE)], dim=0)
+    denom = mat.sum(dim=0)
+    
+    loss = - torch.log(numer / denom).sum() / (2 * BATCH_SIZE)

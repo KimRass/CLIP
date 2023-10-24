@@ -12,7 +12,7 @@ from tqdm import tqdm
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 
-def _encode(text, tokenizer):
+def encode(text, tokenizer):
     encoding = tokenizer(
         text,
         truncation=True,
@@ -53,7 +53,7 @@ class Flickr8kDataset(Dataset):
                         self.captions[img_path].append(text)
 
         # for img_path, texts in self.captions.items():
-        #     ls_token_ids = _encode(texts, tokenizer=self.tokenizer)
+        #     ls_token_ids = encode(texts, tokenizer=self.tokenizer)
         #     self.captions[img_path] = ls_token_ids
 
         #     for token_ids in ls_token_ids:
@@ -74,7 +74,7 @@ class Flickr8kDataset(Dataset):
         # token_ids = random.choice(ls_token_ids)
         texts = self.captions[img_path]
         text = random.choice(texts)
-        token_ids = _encode(text, tokenizer=self.tokenizer)
+        token_ids = encode(text, tokenizer=self.tokenizer)
         return image, token_ids
 
 
@@ -110,28 +110,3 @@ class DataCollatorForDynamicPadding(object):
         token_ids = torch.as_tensor(ls_token_ids)
         attn_mask = self._get_attention_mask(token_ids)
         return images, token_ids, attn_mask
-
-
-if __name__ == "__main__":
-    from transformers import DistilBertTokenizerFast
-
-    tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
-    flickr = Flickr8kDataset(
-        data_dir="/Users/jongbeomkim/Documents/datasets/flickr8k",
-        tokenizer=tokenizer,
-        # max_len=64,
-    )
-    flickr[3]
-    ls_token_ids = flickr.captions["/Users/jongbeomkim/Documents/datasets/flickr8k/Images/53043785_c468d6f931.jpg"]
-
-    # texts = ['A child in a pink dress is climbing up a set of stairs in an entry way.', 'A girl going into a wooden building.', 'A little girl climbing into a wooden playhouse.', 'A little girl climbing the stairs to her playhouse.', 'A little girl in a pink dress going into a wooden cabin.']
-    # _encode(texts, tokenizer)
-    # tokenizer(
-    #     texts[0],
-    #     truncation=True,
-    #     # padding=False,
-    #     padding="max_length",
-    #     max_length=30,
-    #     return_token_type_ids=False,
-    #     return_attention_mask=False,
-    # )

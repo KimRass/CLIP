@@ -12,6 +12,7 @@ from utils import load_config, get_device, get_elapsed_time
 from flickr import Flickr8kDataset, DataCollatorForDynamicPadding
 from clip import CLIP
 from tokenizer import load_tokenizer
+
 # CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/CONFIG.yaml")
 CONFIG = load_config(Path(__file__).parent/"config.yaml")
 

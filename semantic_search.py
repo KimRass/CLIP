@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from transformers import DistilBertTokenizerFast
 import numpy as np
@@ -9,7 +10,7 @@ from pathlib import Path
 import wandb
 
 from utils import load_config, get_device, image_to_grid
-from flickr import Flickr8kDataset, DataCollatorForDynamicPadding
+from flickr import Flickr8kDataset, DataCollatorForDynamicPadding, encode
 from train import get_clip
 
 # CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/CONFIG.yaml")
@@ -33,25 +34,32 @@ if __name__ == "__main__":
     test_dl = DataLoader(
         flickr,
         batch_size=4,
-        shuffle=True,
+        shuffle=False,
         num_workers=0,
         pin_memory=True,
-        drop_last=True,
+        drop_last=False,
         collate_fn=collator,
     )
 
-    for _, token_ids, attn_mask in test_dl:
-        tot_mat = torch.empty(size=(4, 0))
-        tot_image = torch.empty(size=(0, 3, 224, 224))
+    query = "A blonde horse and a blonde girl in a black sweatshirt are staring at a fire in a barrel ."
+    token_ids = encode(query, tokenizer=tokenizer)
+    attn_mask = [1] * len(token_ids)
+    token_ids = torch.as_tensor(token_ids)[None, ...]
+    attn_mask = torch.as_tensor(attn_mask)[None, ...]
+    text_embed = text_enc(token_ids=token_ids, attn_mask=attn_mask)
 
-        text_embed = text_enc(token_ids=token_ids, attn_mask=attn_mask)
-        for image, _, _ in test_dl:
-            img_embed = img_enc(image)
-            mat = text_embed @ img_embed.T
-            tot_mat = torch.cat([tot_mat, mat], dim=1)
-            tot_image = torch.cat([tot_image, image], dim=0)
-
-        tokenizer.decode(token_ids[0])
-        torch.argmax(tot_mat, dim=1)
-        grid = image_to_grid(image=tot_image, n_cols=4, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
-        grid.show()
+    tot_sim = torch.empty(size=(0,))
+    tot_image = torch.empty(size=(0, 3, 224, 224))
+    for image, _, _ in test_dl:
+        # pass
+        img_embed = img_enc(image)
+        # sim = F.cosine_similarity(text_embed, img_embed)
+        sim = text_embed @ img_embed.T
+        tot_sim = torch.cat([tot_sim, sim[0]], dim=0)
+        tot_image = torch.cat([tot_image, image], dim=0)
+    # tot_sim
+    # text_embed.shape, img_embed.shape, sim.shape
+    print(tot_sim)
+    print(torch.argmax(tot_sim, dim=0))
+    grid = image_to_grid(image=tot_image, n_cols=4, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+    grid.show()
