@@ -102,8 +102,11 @@ def save_checkpoint(epoch, clip, optim, scaler, save_path):
 if __name__ == "__main__":
     args = get_args()
 
-    wandb.init(project="CLIP", resume=args.run_id)
-    wandb.config.update(CONFIG, allow_val_change=True)
+    # run = wandb.init(project="CLIP", resume=args.run_id)
+    # if args.run_id is None:
+    #     args.run_id = wandb.run.name
+    # wandb.config.update(CONFIG, allow_val_change=True)
+    # print(wandb.config)
 
     tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
 
@@ -148,6 +151,7 @@ if __name__ == "__main__":
             )
             accum_img_loss += img_loss.item()
             accum_text_loss += text_loss.item()
+            print(epoch, step, img_loss.item(), text_loss.item())
 
         accum_img_loss /= len(train_dl)
         accum_text_loss /= len(train_dl)
@@ -159,14 +163,14 @@ if __name__ == "__main__":
         msg += f"""[ Temperature: {clip.temp.item():.4f} ]"""
         print(msg)
 
-        wandb.log(
-            {
-                "Image loss": accum_img_loss,
-                "Text loss": accum_text_loss,
-                "Temperature": clip.temp.item(),
-            },
-            step=epoch,
-        )
+        # wandb.log(
+        #     {
+        #         "Image loss": accum_img_loss,
+        #         "Text loss": accum_text_loss,
+        #         "Temperature": clip.temp.item(),
+        #     },
+        #     step=epoch,
+        # )
 
         if epoch == 10:
             save_checkpoint(
