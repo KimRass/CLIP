@@ -75,7 +75,7 @@ class Flickr8kDataset(Dataset):
         texts = self.captions[img_path]
         text = random.choice(texts)
         token_ids = encode(text, tokenizer=self.tokenizer)
-        print(img_path.name, text)
+        print(Path(img_path).name, text)
         return image, token_ids
 
 
