@@ -96,9 +96,7 @@ if __name__ == "__main__":
     img_embed = torch.randn(4, 256)
     text_embed = torch.randn(4, 256)
     mat = (img_embed @ text_embed.T)
-    id_mat = torch.eye(4)
+    id_mat = (torch.eye(4) * 2) - 1
+    F.softmax(mat, dim=1)
     (-F.log_softmax(mat, dim=1) * id_mat).sum(dim=1).mean()
-
-    inv_id_mat = 1 - id_mat
-    (F.log_softmax(mat, dim=1) * inv_id_mat).sum(dim=1).mean()
-    inv_id_mat
+    (-F.log_softmax(mat.T, dim=1) * id_mat).sum(dim=1).mean()
