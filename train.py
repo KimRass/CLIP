@@ -11,7 +11,6 @@ import wandb
 from utils import load_config, get_device, get_elapsed_time
 from flickr import Flickr8kDataset, DataCollatorForDynamicPadding
 from clip import CLIP
-from tokenizer import load_tokenizer
 
 # CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/CONFIG.yaml")
 CONFIG = load_config(Path(__file__).parent/"config.yaml")
@@ -25,6 +24,7 @@ def get_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--data_dir", type=str, required=True)
+    parser.add_argument("--n_epochs", type=int, required=True) # "We train all models for 32 epochs."
     parser.add_argument("--n_cpus", type=int, required=True)
     # "We use a very large minibatch size of 32,768."
     parser.add_argument("--batch_size", type=int, required=False, default=32_768)
@@ -136,7 +136,7 @@ if __name__ == "__main__":
     scaler = GradScaler() if DEVICE.type == "cuda" else None
 
     init_epoch = 0
-    for epoch in range(init_epoch + 1, CONFIG["TRAINING"]["N_EPOCHS"] + 1):
+    for epoch in range(init_epoch + 1, args.n_epochs + 1):
         start_time = time()
         accum_img_loss = 0
         accum_text_loss = 0
@@ -156,7 +156,7 @@ if __name__ == "__main__":
         accum_text_loss /= len(train_dl)
 
         msg = f"[ {get_elapsed_time(start_time)} ]"
-        msg += f"""[ {epoch}/{CONFIG["TRAINING"]["N_EPOCHS"]} ]"""
+        msg += f"""[ {epoch}/{args.n_epochs} ]"""
         msg += f"""[ Image loss: {accum_img_loss:.4f} ]"""
         msg += f"""[ Text loss: {accum_text_loss:.4f} ]"""
         msg += f"""[ Temperature: {clip.temp.item():.4f} ]"""

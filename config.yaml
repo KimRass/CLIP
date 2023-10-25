@@ -16,7 +16,9 @@ ARCHITECTURE:
     # 49,152 vocab size"
     # 저는 WordPiece 기반의 DisbilBERT tokenizer를 사용하고 vocabulary size 또한 가져가겠습니다.
     VOCAB_SIZE: 30522
-    MAX_LEN: 64 # Max length of texts in Flickr8k dataset is 44.
+    # "For computational efficiency, the max sequence length was capped at 76."
+    # Max length of texts in Flickr8k dataset is 44. I'll use 64
+    MAX_LEN: 64
     N_LAYERS: 6 # DistilBERT
     N_HEADS: 12 # DistilBERT
     HIDDEN_DIM: 768 # DistilBERT
@@ -25,7 +27,6 @@ ARCHITECTURE:
 TRAINING:
   LR: 0.001
   # LR: 0.0005 # "$5 \times 10^{-4}$"
-  N_EPOCHS: 32 # "We train all models for 32 epochs."
   MAX_TEMP: 100 # "Maximum temperature"
   WARMUP_STEPS: 2000 # "Warm-up iterations"
 OPTIMIZER:
