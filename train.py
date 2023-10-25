@@ -151,7 +151,7 @@ if __name__ == "__main__":
             )
             accum_img_loss += img_loss.item()
             accum_text_loss += text_loss.item()
-            print(epoch, step, img_loss.item(), text_loss.item())
+            # print(epoch, step, img_loss.item(), text_loss.item())
 
         accum_img_loss /= len(train_dl)
         accum_text_loss /= len(train_dl)
