@@ -73,6 +73,7 @@ class CLIP(nn.Module):
         text_embed = self.text_enc(token_ids=token_ids, attn_mask=attn_mask)
 
         mat = (img_embed @ text_embed.T) / self.temp
+        print(F.softmax(mat, dim=1).max(dim=1)[0])
         # id_mat = (torch.eye(b, device=image.device) * 2) - 1
         id_mat = torch.eye(b, device=image.device)
         img_loss = (-F.log_softmax(mat, dim=1) * id_mat).sum(dim=1).mean()
@@ -107,3 +108,6 @@ if __name__ == "__main__":
     ys = torch.as_tensor([1, 0, 0]).float()
     (-F.log_softmax(temp, dim=0) * ys).sum(dim=0)
     F.cross_entropy(temp, ys)
+
+    F.softmax(mat, dim=1)
+    F.softmax(mat, dim=1).max(dim=1)[0]
