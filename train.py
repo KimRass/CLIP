@@ -131,7 +131,7 @@ if __name__ == "__main__":
         clip.parameters(),
         lr=CONFIG["TRAINING"]["LR"],
         betas=(CONFIG["OPTIMIZER"]["BETA1"], CONFIG["OPTIMIZER"]["BETA2"]),
-        weight_decay=CONFIG["OPTIMIZER"]["WEIGHT_DECAY"],
+        # weight_decay=CONFIG["OPTIMIZER"]["WEIGHT_DECAY"],
     )
 
     scaler = GradScaler() if DEVICE.type == "cuda" else None
