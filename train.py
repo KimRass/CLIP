@@ -151,7 +151,6 @@ if __name__ == "__main__":
             )
             accum_img_loss += img_loss.item()
             accum_text_loss += text_loss.item()
-            # print(epoch, step, img_loss.item(), text_loss.item())
 
         accum_img_loss /= len(train_dl)
         accum_text_loss /= len(train_dl)
@@ -172,11 +171,10 @@ if __name__ == "__main__":
         #     step=epoch,
         # )
 
-        if epoch == 10:
-            save_checkpoint(
-                epoch=epoch,
-                clip=clip,
-                optim=optim,
-                scaler=scaler,
-                save_path=PARENT_DIR/f"checkpoints/epoch_{epoch}.pth",
-            )
+    save_checkpoint(
+        epoch=epoch,
+        clip=clip,
+        optim=optim,
+        scaler=scaler,
+        save_path=PARENT_DIR/f"checkpoints/epoch_{epoch}.pth",
+    )
