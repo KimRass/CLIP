@@ -75,7 +75,6 @@ class Flickr8kDataset(Dataset):
         texts = self.captions[img_path]
         text = random.choice(texts)
         token_ids = encode(text, tokenizer=self.tokenizer)
-        print(Path(img_path).name, text)
         return image, token_ids
 
 
@@ -106,6 +105,8 @@ class DataCollatorForDynamicPadding(object):
             if token_ids_len > max_len:
                 max_len = token_ids_len
 
+        image = torch.stack(images)
         ls_token_ids = [self._pad(token_ids=token_ids, max_len=max_len) for token_ids in ls_token_ids]
+        token_ids = torch.as_tensor(ls_token_ids)
         attn_mask = self._get_attention_mask(token_ids)
-        return torch.stack(images), torch.as_tensor(ls_token_ids), attn_mask
+        return image, token_ids, attn_mask
