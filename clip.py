@@ -81,9 +81,13 @@ class CLIP(nn.Module):
         id_mat = F.softmax((img_sim + text_sim) / 2, dim=1)
         # id_mat = torch.eye(b, device=image.device)
 
-        img_loss = (-F.log_softmax(mat, dim=1) * id_mat).diag(0).mean()
-        text_loss = (-F.log_softmax(mat.T, dim=1) * id_mat.T).diag(0).mean()
-        return img_loss, text_loss
+        # img_loss = (-F.log_softmax(mat, dim=1) * id_mat).diag(0).mean()
+        # text_loss = (-F.log_softmax(mat.T, dim=1) * id_mat.T).diag(0).mean()
+        img_loss = (-F.log_softmax(mat, dim=1) * id_mat).sum(dim=1)
+        text_loss = (-F.log_softmax(mat.T, dim=1) * id_mat.T).sum(dim=1)
+        # return img_loss, text_loss
+        tot_loss = (img_loss + text_loss) / 2
+        return tot_loss.mean()
 
         # logit = (img_embed @ text_embed.T) / self.temp
         # labels = torch.arange(b).to(image.device)
