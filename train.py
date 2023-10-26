@@ -116,7 +116,8 @@ if __name__ == "__main__":
     train_dl = DataLoader(
         flickr,
         batch_size=args.batch_size,
-        shuffle=True,
+        # shuffle=True,
+        shuffle=False,
         num_workers=args.n_cpus,
         pin_memory=True,
         drop_last=True,
