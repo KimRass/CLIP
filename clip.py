@@ -76,8 +76,8 @@ class CLIP(nn.Module):
         print(logits.argmax(dim=0))
 
         labels = torch.arange(b)
-        img_loss = F.cross_entropy(logits, labels, dim=0)
-        text_loss = F.cross_entropy(logits, labels, dim=1)
+        img_loss = F.cross_entropy(logits, labels)
+        text_loss = F.cross_entropy(logits.T, labels.T)
 
         # # print(mat.argmax(dim=0))
         # # print(mat)
