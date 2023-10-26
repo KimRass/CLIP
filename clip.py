@@ -80,7 +80,7 @@ class CLIP(nn.Module):
         img_sim = img_embed @ img_embed.T
         text_sim = text_embed @ text_embed.T
         id_mat = F.softmax((img_sim + text_sim) / 2, dim=1)
-        print(id_mat)
+        print(id_mat.argmax(dim=0))
         # id_mat = torch.eye(b, device=image.device)
 
         # img_loss = (-F.log_softmax(mat, dim=1) * id_mat).diag(0).mean()
