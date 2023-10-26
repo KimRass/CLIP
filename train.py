@@ -68,7 +68,8 @@ def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
         # img_loss, text_loss = clip.get_losses(image=image, token_ids=token_ids, attn_mask=attn_mask)
         img_loss = clip.get_losses(image=image, token_ids=token_ids, attn_mask=attn_mask)
         # print(img_loss, text_loss)
-        tot_loss = (img_loss + text_loss) / 2
+        # tot_loss = (img_loss + text_loss) / 2
+        tot_loss = img_loss
 
     optim.zero_grad()
     if DEVICE.type == "cuda" and scaler is not None:
@@ -83,7 +84,7 @@ def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
     # which we found necessary to prevent training instability."
     # with torch.no_grad():
     #     clip.temp.clamp_(max=100)
-    return img_loss, text_loss
+    # return img_loss, text_loss
 
 
 def save_checkpoint(epoch, clip, optim, scaler, save_path):
@@ -143,7 +144,8 @@ if __name__ == "__main__":
         accum_img_loss = 0
         accum_text_loss = 0
         for step, (image, token_ids, attn_mask) in enumerate(train_dl, start=1):
-            img_loss, text_loss = train_single_step(
+            # img_loss, text_loss = train_single_step(
+            train_single_step(
                 image=image,
                 token_ids=token_ids,
                 attn_mask=attn_mask,
@@ -151,17 +153,17 @@ if __name__ == "__main__":
                 optim=optim,
                 scaler=scaler,
             )
-            accum_img_loss += img_loss.item()
-            accum_text_loss += text_loss.item()
+            # accum_img_loss += img_loss.item()
+            # accum_text_loss += text_loss.item()
 
-        accum_img_loss /= len(train_dl)
-        accum_text_loss /= len(train_dl)
+        # accum_img_loss /= len(train_dl)
+        # accum_text_loss /= len(train_dl)
 
-        msg = f"[ {get_elapsed_time(start_time)} ]"
-        msg += f"""[ {epoch}/{args.n_epochs} ]"""
-        msg += f"""[ Image loss: {accum_img_loss:.4f} ]"""
-        msg += f"""[ Text loss: {accum_text_loss:.4f} ]"""
-        msg += f"""[ Temperature: {clip.temp.item():.4f} ]"""
+        # msg = f"[ {get_elapsed_time(start_time)} ]"
+        # msg += f"""[ {epoch}/{args.n_epochs} ]"""
+        # msg += f"""[ Image loss: {accum_img_loss:.4f} ]"""
+        # msg += f"""[ Text loss: {accum_text_loss:.4f} ]"""
+        # msg += f"""[ Temperature: {clip.temp.item():.4f} ]"""
         # print(msg)
 
         # wandb.log(
