@@ -124,23 +124,7 @@ if __name__ == "__main__":
         collate_fn=collator,
     )
 
-    # clip = get_clip(config=CONFIG, device=DEVICE)
-    clip = CLIP(
-        img_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
-        patch_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["PATCH_SIZE"],
-        img_n_layers=CONFIG["ARCHITECTURE"]["IMG_ENC"]["N_LAYERS"],
-        img_n_heads=CONFIG["ARCHITECTURE"]["IMG_ENC"]["N_HEADS"],
-        img_hidden_dim=CONFIG["ARCHITECTURE"]["IMG_ENC"]["HIDDEN_DIM"],
-        img_mlp_dim=CONFIG["ARCHITECTURE"]["IMG_ENC"]["MLP_DIM"],
-        vocab_size=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["VOCAB_SIZE"],
-        max_len=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["MAX_LEN"],
-        text_n_layers=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["N_LAYERS"],
-        text_n_heads=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["N_HEADS"],
-        text_hidden_dim=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["HIDDEN_DIM"],
-        text_mlp_dim=CONFIG["ARCHITECTURE"]["TEXT_ENC"]["MLP_DIM"],
-        embed_dim=CONFIG["ARCHITECTURE"]["EMBED_DIM"],
-    ).to(DEVICE)
-    clip.train()
+    clip = get_clip(config=CONFIG, device=DEVICE)
 
     # "We use the Adam optimizer with decoupled weight decay regularization (Loshchilov & Hutter, 2017) applied to all
     # weights that are not gains or biases, and decay the learning rate using a cosine schedule."
