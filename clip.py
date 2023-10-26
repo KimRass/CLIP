@@ -69,13 +69,16 @@ class CLIP(nn.Module):
         img_embed = self.img_enc(image)
         text_embed = self.text_enc(token_ids=token_ids, attn_mask=attn_mask)
 
+        img_embed = self._l2_norm(img_embed)
+        text_embed = self._l2_norm(text_embed)
+
         mat = (img_embed @ text_embed.T)
         print(F.softmax(mat, dim=1).diag(0))
         # print(f"{F.softmax(mat, dim=1).diag(0).sum(dim=0).item():5f}")
         # id_mat = (torch.eye(b, device=image.device) * 2) - 1
         id_mat = torch.eye(b, device=image.device)
-        img_loss = (F.log_softmax(mat, dim=1) * id_mat).sum(dim=1).mean()
-        text_loss = (F.log_softmax(mat.T, dim=1) * id_mat).sum(dim=1).mean()
+        img_loss = (-F.log_softmax(mat, dim=1) * id_mat).sum(dim=1).mean()
+        text_loss = (-F.log_softmax(mat.T, dim=1) * id_mat).sum(dim=1).mean()
         return img_loss.mean(), text_loss.mean()
         # logit = (img_embed @ text_embed.T) / self.temp
         # labels = torch.arange(b).to(image.device)
@@ -91,25 +94,17 @@ class CLIP(nn.Module):
 
 
 if __name__ == "__main__":
-    def _l2_norm( x):
+    def _l2_norm(x):
         return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
-    img_embed = torch.randn(4, 256)
-    text_embed = torch.randn(4, 256)
+    b = 4
+    img_embed = torch.randn(b, 256)
+    text_embed = torch.randn(b, 256)
+    img_embed = _l2_norm(img_embed)
+    text_embed = _l2_norm(text_embed)
+    
     mat = (img_embed @ text_embed.T)
-    mat.argmax(dim=1)
-    
-    
-    id_mat = (torch.eye(4) * 2) - 1
+    mat
     F.softmax(mat, dim=1)
-    (-F.log_softmax(mat, dim=1) * id_mat).sum(dim=1).mean()
-    (-F.log_softmax(mat.T, dim=1) * id_mat).sum(dim=1).mean()
-
-    temp = torch.as_tensor([1, 2, 3]).float()
-    F.softmax(temp), F.softmax(temp / 2)
-    ys = torch.as_tensor([1, 0, 0]).float()
-    (-F.log_softmax(temp, dim=0) * ys).sum(dim=0)
-    F.cross_entropy(temp, ys)
-
-    F.softmax(mat, dim=1).diag(0).max()
-    F.softmax(mat, dim=1).diag(0).sum(dim=0).item()
-    F.softmax(mat, dim=1).max(dim=1)[0]
+    -F.log_softmax(mat, dim=1)
+    id_mat = torch.eye(b)
+    -F.log_softmax(mat, dim=1) * id_mat
