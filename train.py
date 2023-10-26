@@ -161,7 +161,7 @@ if __name__ == "__main__":
         msg += f"""[ Image loss: {accum_img_loss:.4f} ]"""
         msg += f"""[ Text loss: {accum_text_loss:.4f} ]"""
         msg += f"""[ Temperature: {clip.temp.item():.4f} ]"""
-        print(msg)
+        # print(msg)
 
         # wandb.log(
         #     {
