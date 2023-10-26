@@ -74,7 +74,8 @@ class CLIP(nn.Module):
 
         mat = (img_embed @ text_embed.T)
 
-        print(mat.argmax(dim=1))
+        # print(mat.argmax(dim=1))
+        print(mat)
 
         img_sim = img_embed @ img_embed.T
         text_sim = text_embed @ text_embed.T
