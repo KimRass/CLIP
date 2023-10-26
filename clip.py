@@ -73,9 +73,10 @@ class CLIP(nn.Module):
         # text_embed = self._l2_norm(text_embed)
 
         logits = torch.matmul(img_embed, text_embed.T) * torch.exp(self.temp)
-        print(logits.argmax(dim=0))
+        # print(logits.argmax(dim=0))
 
         labels = torch.arange(b, device=image.device)
+        print(labels)
         img_loss = F.cross_entropy(logits, labels)
         text_loss = F.cross_entropy(logits.T, labels.T)
 
