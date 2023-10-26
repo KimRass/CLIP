@@ -74,8 +74,8 @@ class CLIP(nn.Module):
 
         mat = (img_embed @ text_embed.T)
 
-        # print(mat.argmax(dim=1))
-        print(mat)
+        print(mat.argmax(dim=0))
+        # print(mat)
 
         img_sim = img_embed @ img_embed.T
         text_sim = text_embed @ text_embed.T
@@ -115,11 +115,4 @@ if __name__ == "__main__":
     # text_embed = _l2_norm(text_embed)
     
     mat = (img_embed @ text_embed.T)
-    a = torch.arange(b)
-    a
     mat
-    torch.take_along_dim(mat, indices=a, dim=1)
-    
-    id_mat = torch.eye(b).bool()
-    -F.log_softmax(mat, dim=1) * id_mat
-    (-F.log_softmax(mat, dim=1) * id_mat).diag(0)
