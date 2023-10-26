@@ -61,8 +61,7 @@ class CLIP(nn.Module):
         self.temp = nn.Parameter(torch.tensor((0.07,)))
 
     def _l2_norm(self, x):
-        # return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
-        return x / ((x ** 2).sum(dim=1, keepdim=True) ** 0.5)
+        return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
 
     def get_losses(self, image, token_ids, attn_mask):
         b, _, _, _ = image.shape
@@ -70,11 +69,12 @@ class CLIP(nn.Module):
         img_embed = self.img_enc(image)
         text_embed = self.text_enc(token_ids=token_ids, attn_mask=attn_mask)
 
-        img_embed = self._l2_norm(img_embed)
-        text_embed = self._l2_norm(text_embed)
+        # img_embed = self._l2_norm(img_embed)
+        # text_embed = self._l2_norm(text_embed)
 
         mat = (img_embed @ text_embed.T)
-        print(F.softmax(mat, dim=1).diag(0))
+        # print(F.softmax(mat, dim=1).diag(0))
+        print(F.softmax(mat, dim=1)[: 4, : 4])
         id_mat = torch.eye(b, device=image.device)
         img_loss = (-F.log_softmax(mat, dim=1) * id_mat).sum(dim=1).mean()
         text_loss = (-F.log_softmax(mat.T, dim=1) * id_mat).sum(dim=1).mean()
@@ -94,14 +94,17 @@ class CLIP(nn.Module):
 
 if __name__ == "__main__":
     def _l2_norm(x):
-        return x / ((x ** 2).sum(dim=1) ** 0.5)
+        return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
+
     b = 4
     img_embed = torch.randn(b, 256)
-    img_embed / ((img_embed ** 2).sum(dim=1, keepdim=True) ** 0.5)
-    img_embed / torch.linalg.vector_norm(img_embed, ord=2, dim=1, keepdim=True)
-    img_embed = _l2_norm(img_embed)
-
     text_embed = torch.randn(b, 256)
-    text_embed = _l2_norm(text_embed)
+
+    # img_embed = _l2_norm(img_embed)
+    # text_embed = _l2_norm(text_embed)
     
-    (img_embed ** 2).sum(dim=1)
+    mat = (img_embed @ text_embed.T)
+    mat
+    id_mat = torch.eye(b)
+    id_mat
+    F.softmax(mat, dim=1)[: 4, : 4]
