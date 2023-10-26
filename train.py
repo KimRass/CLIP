@@ -142,7 +142,7 @@ if __name__ == "__main__":
         start_time = time()
         accum_img_loss = 0
         accum_text_loss = 0
-        for step, (image, token_ids, attn_mask) in enumerate(train_dl, start=1):
+        for image, token_ids, attn_mask in train_dl:
             # img_loss, text_loss = train_single_step(
             train_single_step(
                 image=image,

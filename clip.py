@@ -87,7 +87,7 @@ class CLIP(nn.Module):
         text_loss = (-F.log_softmax(mat.T, dim=1) * id_mat.T).sum(dim=1)
         # return img_loss, text_loss
         tot_loss = (img_loss + text_loss) / 2
-        return tot_loss.mean()
+        return tot_loss.sum()
 
         # logit = (img_embed @ text_embed.T) / self.temp
         # labels = torch.arange(b).to(image.device)
