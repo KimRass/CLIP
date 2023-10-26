@@ -131,7 +131,7 @@ if __name__ == "__main__":
     optim = AdamW(
         clip.parameters(),
         lr=CONFIG["TRAINING"]["LR"],
-        betas=(CONFIG["OPTIMIZER"]["BETA1"], CONFIG["OPTIMIZER"]["BETA2"]),
+        # betas=(CONFIG["OPTIMIZER"]["BETA1"], CONFIG["OPTIMIZER"]["BETA2"]),
         # weight_decay=CONFIG["OPTIMIZER"]["WEIGHT_DECAY"],
     )
 
