@@ -69,10 +69,10 @@ class CLIP(nn.Module):
         img_embed = self.img_enc(image)
         text_embed = self.text_enc(token_ids=token_ids, attn_mask=attn_mask)
 
-        img_embed = self._l2_norm(img_embed)
-        text_embed = self._l2_norm(text_embed)
+        # img_embed = self._l2_norm(img_embed)
+        # text_embed = self._l2_norm(text_embed)
 
-        logits = (img_embed @ text_embed.T) * torch.exp(self.temp)
+        logits = torch.matmul(img_embed, text_embed.T) * torch.exp(self.temp)
         print(logits.argmax(dim=0))
 
         labels = torch.arange(b, device=image.device)
