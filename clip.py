@@ -61,7 +61,7 @@ class CLIP(nn.Module):
         self.temp = nn.Parameter(torch.tensor((0.07,)))
 
     def _l2_norm(self, x):
-        return x / (x ** 2).sum(dim=1) ** 0.5
+        return x / ((x ** 2).sum(dim=1) ** 0.5)
 
     def get_losses(self, image, token_ids, attn_mask):
         b, _, _, _ = image.shape
