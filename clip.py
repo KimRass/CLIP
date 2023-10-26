@@ -84,7 +84,7 @@ class CLIP(nn.Module):
         # img_loss = (-F.log_softmax(mat, dim=1) * id_mat).diag(0).mean()
         # text_loss = (-F.log_softmax(mat.T, dim=1) * id_mat.T).diag(0).mean()
         img_loss = (-F.log_softmax(mat, dim=1) * id_mat).sum(dim=1)
-        text_loss = (-F.log_softmax(mat.T, dim=1) * id_mat.T).sum(dim=1)
+        text_loss = (-F.log_softmax(mat, dim=0) * id_mat).sum(dim=0)
         # return img_loss, text_loss
         tot_loss = (img_loss + text_loss) / 2
         return tot_loss.sum()
