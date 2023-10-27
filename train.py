@@ -166,6 +166,7 @@ if __name__ == "__main__":
                 token_ids=token_ids,
                 attn_mask=attn_mask,
                 clip=clip,
+                crit=crit,
                 optim=optim,
                 scaler=scaler,
             )
