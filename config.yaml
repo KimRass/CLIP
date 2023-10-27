@@ -25,7 +25,8 @@ ARCHITECTURE:
     MLP_DIM: 3072 # DistilBERT
   EMBED_DIM: 256
 TRAINING:
-  LR: 0.00005 # "$5 \times 10^{-4}$"
+  # LR: 0.00005 # "$5 \times 10^{-4}$"
+  LR: 0.0001 # "$5 \times 10^{-4}$"
   # IMG_ENC_LR: 0.0001
   # TEXT_ENC_LR: 0.00001
   MAX_TEMP: 100 # "Maximum temperature"

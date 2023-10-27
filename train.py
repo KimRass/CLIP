@@ -96,7 +96,7 @@ def validate(image, token_ids, attn_mask, clip, metric):
 
     img_embed, text_embed = clip(image=image, token_ids=token_ids, attn_mask=attn_mask)
     acc = metric(img_embed=img_embed, text_embed=text_embed)
-    print(acc)
+    print(f"Accuracy: {acc:.4f}")
 
 
 def save_checkpoint(epoch, clip, optim, scaler, save_path):
@@ -130,8 +130,8 @@ if __name__ == "__main__":
     train_dl = DataLoader(
         flickr,
         batch_size=args.batch_size,
-        # shuffle=True,
-        shuffle=False,
+        shuffle=True,
+        # shuffle=False,
         num_workers=args.n_cpus,
         pin_memory=True,
         drop_last=True,
