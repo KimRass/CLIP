@@ -183,6 +183,9 @@ if __name__ == "__main__":
         msg += f"""[ Temperature: {clip.temp.item():.4f} ]"""
         print(msg)
 
+        validate(
+            image=image, token_ids=token_ids, attn_mask=attn_mask, clip=clip, metric=metric,
+        )
         # wandb.log(
         #     {
         #         "Image loss": accum_img_loss,
