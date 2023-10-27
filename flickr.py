@@ -1,3 +1,7 @@
+# Sources:
+    # https://www.kaggle.com/datasets/adityajn105/flickr8k
+    # https://www.kaggle.com/datasets/adityajn105/flickr30k
+
 import torch
 from torch.utils.data import Dataset
 import torchvision.transforms as T
@@ -7,7 +11,6 @@ from PIL import Image
 import re
 from collections import defaultdict
 import random
-from tqdm import tqdm
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -23,7 +26,7 @@ def encode(text, tokenizer):
     return encoding["input_ids"]
 
 
-class Flickr8kDataset(Dataset):
+class FlickrDataset(Dataset):
     def __init__(self, data_dir, tokenizer):
         super().__init__()
 
@@ -52,16 +55,6 @@ class Flickr8kDataset(Dataset):
                     if img_path in self.img_paths:
                         self.captions[img_path].append(text)
 
-        # for img_path, texts in self.captions.items():
-        #     ls_token_ids = encode(texts, tokenizer=self.tokenizer)
-        #     self.captions[img_path] = ls_token_ids
-
-        #     for token_ids in ls_token_ids:
-        #         token_ids_len = len(token_ids)
-        #         if token_ids_len > self.max_len:
-        #             self.max_len = token_ids_len
-        # print(f"The maximum length of token IDs is {self.max_len:,}.")
-
     def __len__(self):
         return len(self.captions)
 
@@ -70,8 +63,6 @@ class Flickr8kDataset(Dataset):
         image = Image.open(img_path)
         image = self.transforms(image)
 
-        # ls_token_ids = self.captions[img_path]
-        # token_ids = random.choice(ls_token_ids)
         texts = self.captions[img_path]
         text = random.choice(texts)
         token_ids = encode(text, tokenizer=self.tokenizer)

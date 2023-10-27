@@ -59,7 +59,8 @@ class CLIP(nn.Module):
         )
 
         # "The learnable temp parameter was initialized to the equivalent of 0.07."
-        self.temp = nn.Parameter(torch.tensor((0.07,)))
+        # self.temp = nn.Parameter(torch.tensor((0.07,)))
+        self.temp = nn.Parameter(torch.tensor((1,)))
 
         # self.gt = torch.arange(batch_size)
 
