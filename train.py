@@ -11,6 +11,8 @@ import wandb
 from utils import load_config, get_device, get_elapsed_time
 from flickr import Flickr8kDataset, DataCollatorForDynamicPadding
 from clip import CLIP
+from loss import CLIPLoss
+from evaluate import TopKAccuracy
 
 # CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/CONFIG.yaml")
 CONFIG = load_config(Path(__file__).parent/"config.yaml")
@@ -34,7 +36,8 @@ def get_args():
     return args
 
 
-def get_clip(config, device, batch_size):
+# def get_clip(config, device, batch_size):
+def get_clip(config, device):
     clip = CLIP(
         img_size=config["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
         patch_size=config["ARCHITECTURE"]["IMG_ENC"]["PATCH_SIZE"],
@@ -49,13 +52,13 @@ def get_clip(config, device, batch_size):
         text_hidden_dim=config["ARCHITECTURE"]["TEXT_ENC"]["HIDDEN_DIM"],
         text_mlp_dim=config["ARCHITECTURE"]["TEXT_ENC"]["MLP_DIM"],
         embed_dim=config["ARCHITECTURE"]["EMBED_DIM"],
-        batch_size=batch_size,
+        # batch_size=batch_size,
     ).to(device)
     clip.train()
     return clip
 
 
-def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
+def train_single_step(image, token_ids, attn_mask, clip, crit, optim, scaler):
     image = image.to(DEVICE)
     token_ids = token_ids.to(DEVICE)
     attn_mask = attn_mask.to(DEVICE)
@@ -66,7 +69,8 @@ def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
         dtype=torch.float16 if DEVICE.type == "cuda" else torch.bfloat16,
         enabled=True,
     ):
-        img_loss, text_loss = clip(image=image, token_ids=token_ids, attn_mask=attn_mask)
+        img_embed, text_embed = clip(image=image, token_ids=token_ids, attn_mask=attn_mask)
+        img_loss, text_loss = crit(img_embed=img_embed, text_embed=text_embed)
         tot_loss = (img_loss + text_loss) / 2
 
     optim.zero_grad()
@@ -83,6 +87,16 @@ def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
     with torch.no_grad():
         clip.temp.clamp_(max=100)
     return img_loss, text_loss
+
+
+def validate(image, token_ids, attn_mask, clip, metric):
+    image = image.to(DEVICE)
+    token_ids = token_ids.to(DEVICE)
+    attn_mask = attn_mask.to(DEVICE)
+
+    img_embed, text_embed = clip(image=image, token_ids=token_ids, attn_mask=attn_mask)
+    acc = metric(img_embed=img_embed, text_embed=text_embed)
+    print(acc)
 
 
 def save_checkpoint(epoch, clip, optim, scaler, save_path):
@@ -124,7 +138,10 @@ if __name__ == "__main__":
         collate_fn=collator,
     )
 
-    clip = get_clip(config=CONFIG, device=DEVICE, batch_size=args.batch_size)
+    # clip = get_clip(config=CONFIG, device=DEVICE, batch_size=args.batch_size)
+    clip = get_clip(config=CONFIG, device=DEVICE)
+    crit = CLIPLoss(batch_size=args.batch_size, temp=clip.temp)
+    metric = TopKAccuracy(k=1)
 
     # "We use the Adam optimizer with decoupled weight decay regularization (Loshchilov & Hutter, 2017) applied to all
     # weights that are not gains or biases, and decay the learning rate using a cosine schedule."

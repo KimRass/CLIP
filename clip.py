@@ -35,7 +35,7 @@ class CLIP(nn.Module):
         text_hidden_dim,
         text_mlp_dim,
         embed_dim,
-        batch_size,
+        # batch_size,
     ):
         super().__init__()
 
@@ -61,7 +61,7 @@ class CLIP(nn.Module):
         # "The learnable temp parameter was initialized to the equivalent of 0.07."
         self.temp = nn.Parameter(torch.tensor((0.07,)))
 
-        self.gt = torch.arange(batch_size)
+        # self.gt = torch.arange(batch_size)
 
     def _l2_norm(self, x):
         return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
@@ -71,30 +71,31 @@ class CLIP(nn.Module):
 
         img_embed = self.img_enc(image)
         text_embed = self.text_enc(token_ids=token_ids, attn_mask=attn_mask)
+        return img_embed, text_embed
 
-        img_embed = self._l2_norm(img_embed)
-        text_embed = self._l2_norm(text_embed)
+        # img_embed = self._l2_norm(img_embed)
+        # text_embed = self._l2_norm(text_embed)
 
-        sim_mat = torch.matmul(img_embed, text_embed.T) * torch.exp(self.temp)
-        # print(F.softmax(sim_mat, dim=1).argmax(dim=1))
+        # sim_mat = torch.matmul(img_embed, text_embed.T) * torch.exp(self.temp)
+        # # print(F.softmax(sim_mat, dim=1).argmax(dim=1))
 
-        # gt = torch.arange(b, device=image.device)
-        self.gt = self.gt.to(image.device)
-        img_loss = F.cross_entropy(sim_mat, self.gt, reduction="mean")
-        text_loss = F.cross_entropy(sim_mat.T, self.gt, reduction="mean")
-        return img_loss, text_loss
+        # # gt = torch.arange(b, device=image.device)
+        # self.gt = self.gt.to(image.device)
+        # img_loss = F.cross_entropy(sim_mat, self.gt, reduction="mean")
+        # text_loss = F.cross_entropy(sim_mat.T, self.gt, reduction="mean")
+        # return img_loss, text_loss
 
 
-if __name__ == "__main__":
-    def _l2_norm(x):
-        return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
+# if __name__ == "__main__":
+#     def _l2_norm(x):
+#         return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
 
-    b = 4
-    img_embed = torch.randn(b, 256)
-    text_embed = torch.randn(b, 256)
+#     b = 4
+#     img_embed = torch.randn(b, 256)
+#     text_embed = torch.randn(b, 256)
 
-    # img_embed = _l2_norm(img_embed)
-    # text_embed = _l2_norm(text_embed)
+#     # img_embed = _l2_norm(img_embed)
+#     # text_embed = _l2_norm(text_embed)
     
-    mat = (img_embed @ text_embed.T)
-    -F.log_softmax(mat, dim=1)
+#     mat = (img_embed @ text_embed.T)
+#     -F.log_softmax(mat, dim=1)
