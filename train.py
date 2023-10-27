@@ -9,7 +9,7 @@ from pathlib import Path
 import wandb
 
 from utils import load_config, get_device, get_elapsed_time
-from flickr import Flickr8kDataset, DataCollatorForDynamicPadding
+from flickr import FlickrDataset, DataCollatorForDynamicPadding
 from clip import CLIP
 from loss import CLIPLoss
 from evaluate import TopKAccuracy
@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
     tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
 
-    flickr = Flickr8kDataset(data_dir=args.data_dir, tokenizer=tokenizer)
+    flickr = FlickrDataset(data_dir=args.data_dir, tokenizer=tokenizer)
     collator = DataCollatorForDynamicPadding(tokenizer=tokenizer)
     train_dl = DataLoader(
         flickr,
