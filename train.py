@@ -141,7 +141,7 @@ if __name__ == "__main__":
     # clip = get_clip(config=CONFIG, device=DEVICE, batch_size=args.batch_size)
     clip = get_clip(config=CONFIG, device=DEVICE)
     crit = CLIPLoss(batch_size=args.batch_size, temp=clip.temp)
-    metric = TopKAccuracy(k=1)
+    metric = TopKAccuracy(k=1, batch_size=args.batch_size)
 
     # "We use the Adam optimizer with decoupled weight decay regularization (Loshchilov & Hutter, 2017) applied to all
     # weights that are not gains or biases, and decay the learning rate using a cosine schedule."
