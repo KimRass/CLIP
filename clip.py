@@ -35,6 +35,7 @@ class CLIP(nn.Module):
         text_hidden_dim,
         text_mlp_dim,
         embed_dim,
+        batch_size,
     ):
         super().__init__()
 
@@ -60,28 +61,27 @@ class CLIP(nn.Module):
         # "The learnable temp parameter was initialized to the equivalent of 0.07."
         self.temp = nn.Parameter(torch.tensor((0.07,)))
 
+        self.gt = torch.arange(batch_size, device=self.device)
+
     def _l2_norm(self, x):
         return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
 
-    # def get_losses(self, image, token_ids, attn_mask):
     def forward(self, image, token_ids, attn_mask):
-        b, _, _, _ = image.shape
+        # b, _, _, _ = image.shape
 
         img_embed = self.img_enc(image)
         text_embed = self.text_enc(token_ids=token_ids, attn_mask=attn_mask)
 
-        # img_embed = self._l2_norm(img_embed)
-        # text_embed = self._l2_norm(text_embed)
+        img_embed = self._l2_norm(img_embed)
+        text_embed = self._l2_norm(text_embed)
 
-        logits = torch.matmul(img_embed, text_embed.T)
-        print(F.softmax(logits, dim=1).argmax(dim=1))
+        sim_mat = torch.matmul(img_embed, text_embed.T) * torch.exp(self.temp)
+        # print(F.softmax(sim_mat, dim=1).argmax(dim=1))
 
-        labels = torch.arange(b, device=image.device)
-        img_loss = F.cross_entropy(logits, labels)
-        text_loss = F.cross_entropy(logits.T, labels)
-
-        tot_loss = (img_loss + text_loss) / 2
-        return tot_loss.sum()
+        # gt = torch.arange(b, device=image.device)
+        img_loss = F.cross_entropy(sim_mat, self.gt)
+        text_loss = F.cross_entropy(sim_mat.T, self.gt)
+        return img_loss, text_loss
 
 
 if __name__ == "__main__":
