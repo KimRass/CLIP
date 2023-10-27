@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 from torchvision.models import VisionTransformer
 # from torchvision.models import vit_b_32

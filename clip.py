@@ -61,7 +61,7 @@ class CLIP(nn.Module):
         # "The learnable temp parameter was initialized to the equivalent of 0.07."
         self.temp = nn.Parameter(torch.tensor((0.07,)))
 
-        self.gt = torch.arange(batch_size, device=self.img_enc.device)
+        self.gt = torch.arange(batch_size)
 
     def _l2_norm(self, x):
         return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
@@ -79,6 +79,7 @@ class CLIP(nn.Module):
         # print(F.softmax(sim_mat, dim=1).argmax(dim=1))
 
         # gt = torch.arange(b, device=image.device)
+        self.gt = self.gt.to(image.device)
         img_loss = F.cross_entropy(sim_mat, self.gt)
         text_loss = F.cross_entropy(sim_mat.T, self.gt)
         return img_loss, text_loss
