@@ -65,7 +65,8 @@ def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
         dtype=torch.float16 if DEVICE.type == "cuda" else torch.bfloat16,
         enabled=True,
     ):
-        tot_loss = clip.get_losses(image=image, token_ids=token_ids, attn_mask=attn_mask)
+        # tot_loss = clip.get_losses(image=image, token_ids=token_ids, attn_mask=attn_mask)
+        tot_loss = clip(image=image, token_ids=token_ids, attn_mask=attn_mask)
         # img_loss, text_loss = clip.get_losses(image=image, token_ids=token_ids, attn_mask=attn_mask)
         # tot_loss = (img_loss + text_loss) / 2
 

@@ -63,7 +63,8 @@ class CLIP(nn.Module):
     def _l2_norm(self, x):
         return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
 
-    def get_losses(self, image, token_ids, attn_mask):
+    # def get_losses(self, image, token_ids, attn_mask):
+    def forward(self, image, token_ids, attn_mask):
         b, _, _, _ = image.shape
 
         img_embed = self.img_enc(image)
