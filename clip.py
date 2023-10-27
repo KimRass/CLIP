@@ -72,40 +72,15 @@ class CLIP(nn.Module):
         # img_embed = self._l2_norm(img_embed)
         # text_embed = self._l2_norm(text_embed)
 
-        logits = torch.matmul(img_embed, text_embed.T) * torch.exp(self.temp)
+        logits = torch.matmul(img_embed, text_embed.T)
         print(F.softmax(logits, dim=1).argmax(dim=1))
 
         labels = torch.arange(b, device=image.device)
         img_loss = F.cross_entropy(logits, labels)
         text_loss = F.cross_entropy(logits.T, labels)
 
-        # # print(mat.argmax(dim=0))
-        # # print(mat)
-
-        # img_sim = img_embed @ img_embed.T
-        # text_sim = text_embed @ text_embed.T
-        # id_mat = F.softmax((img_sim + text_sim) / 2, dim=1)
-        # # print(id_mat.argmax(dim=0))
-        # # id_mat = torch.eye(b, device=image.device)
-
-        # # img_loss = (-F.log_softmax(mat, dim=1) * id_mat).diag(0).mean()
-        # # text_loss = (-F.log_softmax(mat.T, dim=1) * id_mat.T).diag(0).mean()
-        # img_loss = (-F.log_softmax(mat, dim=1) * id_mat).sum(dim=1)
-        # text_loss = (-F.log_softmax(mat, dim=0) * id_mat).sum(dim=0)
         tot_loss = (img_loss + text_loss) / 2
         return tot_loss.sum()
-
-        # logit = (img_embed @ text_embed.T) / self.temp
-        # labels = torch.arange(b).to(image.device)
-        # img_loss = self.ce(logit, labels) / 2
-        # text_loss = self.ce(logit.T, labels) / 2
-        # return img_loss, text_loss
-
-        # img_sim = img_embed @ img_embed.T
-        # text_sim = text_embed @ text_embed.T
-        # targets = F.softmax((img_sim + text_sim) / 2 * self.temp, dim=-1)
-        # img_loss = (-targets * self.log_softmax(logit)).sum(dim=1)
-        # text_loss = (-targets.T * self.log_softmax(logit.T)).sum(dim=1)
 
 
 if __name__ == "__main__":
