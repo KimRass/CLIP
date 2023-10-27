@@ -30,6 +30,7 @@ def get_args():
     parser.add_argument("--n_cpus", type=int, required=True)
     # "We use a very large minibatch size of 32,768."
     parser.add_argument("--batch_size", type=int, required=False, default=32_768)
+    parser.add_argument("--max_len", type=int, required=True)
     parser.add_argument("--run_id", type=str, required=False)
 
     args = parser.parse_args()
@@ -37,7 +38,7 @@ def get_args():
 
 
 # def get_clip(config, device, batch_size):
-def get_clip(config, device):
+def get_clip(config, max_len, device):
     clip = CLIP(
         img_size=config["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
         patch_size=config["ARCHITECTURE"]["IMG_ENC"]["PATCH_SIZE"],
@@ -46,7 +47,8 @@ def get_clip(config, device):
         img_hidden_dim=config["ARCHITECTURE"]["IMG_ENC"]["HIDDEN_DIM"],
         img_mlp_dim=config["ARCHITECTURE"]["IMG_ENC"]["MLP_DIM"],
         vocab_size=config["ARCHITECTURE"]["TEXT_ENC"]["VOCAB_SIZE"],
-        max_len=config["ARCHITECTURE"]["TEXT_ENC"]["MAX_LEN"],
+        # max_len=config["ARCHITECTURE"]["TEXT_ENC"]["MAX_LEN"],
+        max_len=max_len,
         text_n_layers=config["ARCHITECTURE"]["TEXT_ENC"]["N_LAYERS"],
         text_n_heads=config["ARCHITECTURE"]["TEXT_ENC"]["N_HEADS"],
         text_hidden_dim=config["ARCHITECTURE"]["TEXT_ENC"]["HIDDEN_DIM"],
@@ -138,8 +140,7 @@ if __name__ == "__main__":
         collate_fn=collator,
     )
 
-    # clip = get_clip(config=CONFIG, device=DEVICE, batch_size=args.batch_size)
-    clip = get_clip(config=CONFIG, device=DEVICE)
+    clip = get_clip(config=CONFIG, max_len=args.max_len, device=DEVICE)
     crit = CLIPLoss(batch_size=args.batch_size, temp=clip.temp)
     metric = TopKAccuracy(k=1, batch_size=args.batch_size)
 

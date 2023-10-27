@@ -18,7 +18,7 @@ ARCHITECTURE:
     VOCAB_SIZE: 30522
     # "For computational efficiency, the max sequence length was capped at 76."
     # Max length of texts in Flickr8k dataset is 44. I'll use 64
-    MAX_LEN: 64
+    # MAX_LEN: 64
     N_LAYERS: 6 # DistilBERT
     N_HEADS: 12 # DistilBERT
     HIDDEN_DIM: 768 # DistilBERT
