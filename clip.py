@@ -80,8 +80,8 @@ class CLIP(nn.Module):
 
         # gt = torch.arange(b, device=image.device)
         self.gt = self.gt.to(image.device)
-        img_loss = F.cross_entropy(sim_mat, self.gt)
-        text_loss = F.cross_entropy(sim_mat.T, self.gt)
+        img_loss = F.cross_entropy(sim_mat, self.gt, reduction="mean")
+        text_loss = F.cross_entropy(sim_mat.T, self.gt, reduction="mean")
         return img_loss, text_loss
 
 
