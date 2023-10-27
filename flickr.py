@@ -15,11 +15,12 @@ import random
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 
-def encode(text, tokenizer):
+def encode(text, tokenizer, max_len):
     encoding = tokenizer(
         text,
         truncation=True,
         padding=False,
+        max_length=max_len,
         return_token_type_ids=False,
         return_attention_mask=False,
     )
@@ -27,12 +28,11 @@ def encode(text, tokenizer):
 
 
 class FlickrDataset(Dataset):
-    def __init__(self, data_dir, tokenizer):
+    def __init__(self, data_dir, tokenizer, max_len):
         super().__init__()
 
         self.data_dir = Path(data_dir)
         self.tokenizer = tokenizer
-        self.max_len = 0
 
         self.images_dir = self.data_dir/"Images"
         self.img_paths = sorted(list(map(str, self.images_dir.glob("**/*.jpg"))))
@@ -65,7 +65,7 @@ class FlickrDataset(Dataset):
 
         texts = self.captions[img_path]
         text = random.choice(texts)
-        token_ids = encode(text, tokenizer=self.tokenizer)
+        token_ids = encode(text, tokenizer=self.tokenizer, max_len=self.max_len)
         return image, token_ids
 
 

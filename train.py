@@ -37,7 +37,6 @@ def get_args():
     return args
 
 
-# def get_clip(config, device, batch_size):
 def get_clip(config, max_len, device):
     clip = CLIP(
         img_size=config["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
@@ -54,7 +53,6 @@ def get_clip(config, max_len, device):
         text_hidden_dim=config["ARCHITECTURE"]["TEXT_ENC"]["HIDDEN_DIM"],
         text_mlp_dim=config["ARCHITECTURE"]["TEXT_ENC"]["MLP_DIM"],
         embed_dim=config["ARCHITECTURE"]["EMBED_DIM"],
-        # batch_size=batch_size,
     ).to(device)
     clip.train()
     return clip
@@ -162,7 +160,6 @@ if __name__ == "__main__":
         accum_text_loss = 0
         for image, token_ids, attn_mask in train_dl:
             img_loss, text_loss = train_single_step(
-            # train_single_step(
                 image=image,
                 token_ids=token_ids,
                 attn_mask=attn_mask,
