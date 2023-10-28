@@ -1,14 +1,14 @@
 import torch
 from torch.optim import AdamW
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, ConcatDataset, random_split
 from torch.cuda.amp import GradScaler
-from transformers import DistilBertTokenizerFast
 import argparse
 from time import time
 from pathlib import Path
 import wandb
 
 from utils import load_config, get_device, get_elapsed_time
+from tokenizer import get_tokenizer
 from flickr import FlickrDataset, DataCollatorForDynamicPadding
 from clip import CLIP
 from loss import CLIPLoss
@@ -20,12 +20,14 @@ CONFIG = load_config(Path(__file__).parent/"config.yaml")
 DEVICE = get_device()
 
 PARENT_DIR = Path(__file__).resolve().parent
+SAVE_DIR = PARENT_DIR/"checkpoints"
 
 
 def get_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--data_dir", type=str, required=True)
+    parser.add_argument("--flickr8k_dir", type=str, required=True)
+    parser.add_argument("--flickr30k_dir", type=str, required=True)
     parser.add_argument("--n_epochs", type=int, required=True) # "We train all models for 32 epochs."
     parser.add_argument("--n_cpus", type=int, required=True)
     # "We use a very large minibatch size of 32,768."
@@ -46,7 +48,6 @@ def get_clip(config, max_len, device):
         img_hidden_dim=config["ARCHITECTURE"]["IMG_ENC"]["HIDDEN_DIM"],
         img_mlp_dim=config["ARCHITECTURE"]["IMG_ENC"]["MLP_DIM"],
         vocab_size=config["ARCHITECTURE"]["TEXT_ENC"]["VOCAB_SIZE"],
-        # max_len=config["ARCHITECTURE"]["TEXT_ENC"]["MAX_LEN"],
         max_len=max_len,
         text_n_layers=config["ARCHITECTURE"]["TEXT_ENC"]["N_LAYERS"],
         text_n_heads=config["ARCHITECTURE"]["TEXT_ENC"]["N_HEADS"],
@@ -89,53 +90,88 @@ def train_single_step(image, token_ids, attn_mask, clip, crit, optim, scaler):
     return img_loss, text_loss
 
 
-def validate(image, token_ids, attn_mask, clip, metric):
-    image = image.to(DEVICE)
-    token_ids = token_ids.to(DEVICE)
-    attn_mask = attn_mask.to(DEVICE)
+@torch.no_grad()
+def validate(val_dl, clip, metric):
+    clip.eval()
 
-    img_embed, text_embed = clip(image=image, token_ids=token_ids, attn_mask=attn_mask)
-    acc = metric(img_embed=img_embed, text_embed=text_embed)
-    print(f"Accuracy: {acc:.4f}")
+    accum_acc = 0
+    for image, token_ids, attn_mask in val_dl:
+        image = image.to(DEVICE)
+        token_ids = token_ids.to(DEVICE)
+        attn_mask = attn_mask.to(DEVICE)
+
+        img_embed, text_embed = clip(image=image, token_ids=token_ids, attn_mask=attn_mask)
+        acc = metric(img_embed=img_embed, text_embed=text_embed)
+
+        accum_acc += acc.item()
+    avg_acc = accum_acc / len(val_dl)
+
+    clip.train()
+    return avg_acc
 
 
 def save_checkpoint(epoch, clip, optim, scaler, save_path):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     state_dict = {
-        "epoch": epoch,
+        # "epoch": epoch,
         "image_encoder": clip.img_enc.state_dict(),
         "text_encoder": clip.text_enc.state_dict(),
-        "temperature": clip.temp.item(),
-        "optimizer": optim.state_dict(),
+        # "temperature": clip.temp.item(),
+        # "optimizer": optim.state_dict(),
     }
-    if scaler is not None:
-        state_dict["scaler"] = scaler.state_dict()
+    # if scaler is not None:
+    #     state_dict["scaler"] = scaler.state_dict()
     torch.save(state_dict, str(save_path))
     # wandb.save(str(save_path), base_path=Path(save_path).parent)
+    print("Saved the checkpoint.")
+
+
+def get_dls(flickr8k_dir, flickr30k_dir, tokenizer, max_len, batch_size, n_cpus):
+    ds1 = FlickrDataset(data_dir=flickr8k_dir, tokenizer=tokenizer, max_len=max_len)
+    ds2 = FlickrDataset(data_dir=flickr30k_dir, tokenizer=tokenizer, max_len=max_len)
+    ds = ConcatDataset(ds1, ds2)
+    train_size = round(len(ds) * 0.9)
+    val_size = len(ds) - train_size
+    train_ds, val_ds = random_split(ds, [train_size, val_size])
+    collator = DataCollatorForDynamicPadding(tokenizer=tokenizer)
+    train_dl = DataLoader(
+        train_ds,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=n_cpus,
+        pin_memory=True,
+        drop_last=True,
+        collate_fn=collator,
+    )
+    val_dl = DataLoader(
+        val_ds,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=n_cpus,
+        pin_memory=True,
+        drop_last=True,
+        collate_fn=collator,
+    )
+    return train_dl, val_dl
 
 
 if __name__ == "__main__":
     args = get_args()
 
-    # run = wandb.init(project="CLIP", resume=args.run_id)
-    # if args.run_id is None:
-    #     args.run_id = wandb.run.name
-    # wandb.config.update(CONFIG, allow_val_change=True)
-    # print(wandb.config)
+    run = wandb.init(project="CLIP", resume=args.run_id)
+    if args.run_id is None:
+        args.run_id = wandb.run.name
+    wandb.config.update(CONFIG, allow_val_change=True)
+    print(wandb.config)
 
-    tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
-
-    flickr = FlickrDataset(data_dir=args.data_dir, tokenizer=tokenizer)
-    collator = DataCollatorForDynamicPadding(tokenizer=tokenizer)
-    train_dl = DataLoader(
-        flickr,
+    tokenizer = get_tokenizer()
+    train_dl, val_dl = get_dls(
+        flickr8k_dir=args.flickr8k_dir,
+        flickr30k_dir=args.flickr30k_dir,
+        tokenizer=tokenizer,
+        max_len=args.max_len,
         batch_size=args.batch_size,
-        shuffle=True,
-        # shuffle=False,
-        num_workers=args.n_cpus,
-        pin_memory=True,
-        drop_last=True,
-        collate_fn=collator,
+        n_cpus=args.n_cpus,
     )
 
     clip = get_clip(config=CONFIG, max_len=args.max_len, device=DEVICE)
@@ -147,13 +183,14 @@ if __name__ == "__main__":
     optim = AdamW(
         clip.parameters(),
         lr=CONFIG["TRAINING"]["LR"],
-        # betas=(CONFIG["OPTIMIZER"]["BETA1"], CONFIG["OPTIMIZER"]["BETA2"]),
-        # weight_decay=CONFIG["OPTIMIZER"]["WEIGHT_DECAY"],
+        betas=(CONFIG["OPTIMIZER"]["BETA1"], CONFIG["OPTIMIZER"]["BETA2"]),
+        weight_decay=CONFIG["OPTIMIZER"]["WEIGHT_DECAY"],
     )
 
     scaler = GradScaler() if DEVICE.type == "cuda" else None
 
     init_epoch = 0
+    max_avg_acc = 0
     for epoch in range(init_epoch + 1, args.n_epochs + 1):
         start_time = time()
         accum_img_loss = 0
@@ -171,32 +208,34 @@ if __name__ == "__main__":
             accum_img_loss += img_loss.item()
             accum_text_loss += text_loss.item()
 
-        accum_img_loss /= len(train_dl)
-        accum_text_loss /= len(train_dl)
+        avg_img_loss = accum_img_loss / len(train_dl)
+        avg_text_loss = accum_text_loss / len(train_dl)
+
+        avg_acc = validate(val_dl=val_dl, clip=clip, metric=metric)
 
         msg = f"[ {get_elapsed_time(start_time)} ]"
         msg += f"""[ {epoch}/{args.n_epochs} ]"""
-        msg += f"""[ Image loss: {accum_img_loss:.4f} ]"""
-        msg += f"""[ Text loss: {accum_text_loss:.4f} ]"""
+        msg += f"""[ Image loss: {avg_img_loss:.4f} ]"""
+        msg += f"""[ Text loss: {avg_text_loss:.4f} ]"""
         msg += f"""[ Temperature: {clip.temp.item():.4f} ]"""
+        msg += f"""[ Accuracy: {avg_acc:.4f} ]"""
         print(msg)
 
-        validate(
-            image=image, token_ids=token_ids, attn_mask=attn_mask, clip=clip, metric=metric,
+        wandb.log(
+            {
+                "Image loss": avg_img_loss,
+                "Text loss": avg_text_loss,
+                "Temperature": clip.temp.item(),
+                "Accuracy": avg_acc,
+            },
+            step=epoch,
         )
-        # wandb.log(
-        #     {
-        #         "Image loss": accum_img_loss,
-        #         "Text loss": accum_text_loss,
-        #         "Temperature": clip.temp.item(),
-        #     },
-        #     step=epoch,
-        # )
 
-    save_checkpoint(
-        epoch=epoch,
-        clip=clip,
-        optim=optim,
-        scaler=scaler,
-        save_path=PARENT_DIR/f"checkpoints/epoch_{epoch}.pth",
-    )
+    if avg_acc > max_avg_acc:
+        save_checkpoint(
+            epoch=epoch,
+            clip=clip,
+            optim=optim,
+            scaler=scaler,
+            save_path=SAVE_DIR/"epoch_{epoch}.pth",
+        )

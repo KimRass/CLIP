@@ -45,9 +45,13 @@ def denorm(tensor, mean, std):
 
 
 def image_to_grid(image, n_cols, mean, std):
-    tensor = image.detach().cpu()
+    tensor = image.clone().detach().cpu()
     tensor = denorm(tensor, mean=mean, std=std)
     grid = make_grid(tensor, nrow=n_cols, padding=2, pad_value=1)
     grid.clamp_(0, 1)
     grid = TF.to_pil_image(grid)
     return grid
+
+
+def l2_norm(x):
+    return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)

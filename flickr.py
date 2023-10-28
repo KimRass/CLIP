@@ -33,6 +33,7 @@ class FlickrDataset(Dataset):
 
         self.data_dir = Path(data_dir)
         self.tokenizer = tokenizer
+        self.max_len = max_len
 
         self.images_dir = self.data_dir/"Images"
         self.img_paths = sorted(list(map(str, self.images_dir.glob("**/*.jpg"))))

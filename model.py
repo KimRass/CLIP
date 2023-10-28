@@ -1,6 +1,5 @@
 import torch.nn as nn
 from torchvision.models import VisionTransformer
-# from torchvision.models import vit_b_32
 from transformers import DistilBertConfig, DistilBertModel
 
 
@@ -25,7 +24,7 @@ class ImageEncoder(nn.Module):
         return x
 
 
-# "The text encoder is a Transformer with the architecture modifications described in Radford et al. (2019).
+# "The text encoder is a Transformer with the architecture modifications described in Radford et al. (2019)."
 # As a base size we use a 63M-parameter 12-layer 512-wide model with 8 attention heads. The text sequence is bracketed with [SOS] and [EOS] tokens and the activations of the highest layer of the transformer at the [EOS] token are treated as the feature representation of the text which is layer normalized and then linearly projected into the multi-modal embedding space. Masked self-attention was used in the text encoder to preserve"
 class TextEncoder(nn.Module):
     def __init__(self, vocab_size, max_len, n_layers, n_heads, hidden_dim, mlp_dim, embed_dim):

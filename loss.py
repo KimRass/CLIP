@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from utils import l2_norm
+
 
 class CLIPLoss(nn.Module):
     def __init__(self, batch_size, temp):
@@ -11,12 +13,9 @@ class CLIPLoss(nn.Module):
 
         self.gt = torch.arange(batch_size)
 
-    def _l2_norm(self, x):
-        return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
-
     def forward(self, img_embed, text_embed):
-        img_embed = self._l2_norm(img_embed)
-        text_embed = self._l2_norm(text_embed)
+        img_embed = l2_norm(img_embed)
+        text_embed = l2_norm(text_embed)
 
         sim_mat = torch.matmul(img_embed, text_embed.T) * torch.exp(self.temp)
 
@@ -24,3 +23,12 @@ class CLIPLoss(nn.Module):
         img_loss = F.cross_entropy(sim_mat, self.gt, reduction="mean")
         text_loss = F.cross_entropy(sim_mat.T, self.gt, reduction="mean")
         return img_loss, text_loss
+
+
+if __name__ == "__main__":
+    a = torch.randn(4, 4)
+    b = torch.randn(4, 4)
+    a = l2_norm(a)
+    b = l2_norm(b)
+    torch.matmul(a, b.T)
+    F.cosine_similarity(a, b)
