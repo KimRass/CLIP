@@ -6,6 +6,7 @@ import argparse
 from time import time
 from pathlib import Path
 import wandb
+import warnings
 
 from utils import load_config, get_device, get_elapsed_time, _modify_state_dict
 from tokenizer import get_tokenizer
@@ -14,6 +15,17 @@ from data_augmentation import get_val_transformer
 from clip import CLIP
 from loss import CLIPLoss
 from evaluate import TopKAccuracy
+
+gpu_ok = False
+if torch.cuda.is_available():
+    device_cap = torch.cuda.get_device_capability()
+    if device_cap in ((7, 0), (8, 0), (9, 0)):
+        gpu_ok = True
+
+if not gpu_ok:
+    warnings.warn(
+        "GPU is not NVIDIA V100, A100, or H100. Speedup numbers may be lower than expected."
+    )
 
 # CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/CONFIG.yaml")
 CONFIG = load_config(Path(__file__).parent/"config.yaml")
@@ -56,7 +68,7 @@ def get_clip(config, max_len, device):
         text_mlp_dim=config["ARCHITECTURE"]["TEXT_ENC"]["MLP_DIM"],
         embed_dim=config["ARCHITECTURE"]["EMBED_DIM"],
     ).to(device)
-    clip = torch.compile(clip)
+    # clip = torch.compile(clip)
     clip.train()
     return clip
 

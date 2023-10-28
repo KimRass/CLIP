@@ -48,6 +48,18 @@ if __name__ == "__main__":
         collate_fn=collator,
     )
 
+    # tot_sim = torch.empty(size=(0,))
+    # tot_image = torch.empty(size=(0, 3, 224, 224))
+    for image, _, _ in test_dl:
+        img_embed = img_enc(image)
+        faiss_idx.add(img_embed.detach().cpu().numpy())
+
+        # # img_embed = l2_norm(img_embed)
+        # sim_mat = (text_embed @ img_embed.T)
+
+        # tot_sim = torch.cat([tot_sim, sim_mat[0]], dim=0)
+        # tot_image = torch.cat([tot_image, image], dim=0)
+
     # query = "A German Shepherd chases another with a stick in his mouth ."
     query = "A group of people paddle their blue inflatable raft down the rapids ."
     token_ids = encode(query, tokenizer=tokenizer, max_len=max_len)
@@ -55,19 +67,7 @@ if __name__ == "__main__":
     token_ids = torch.as_tensor(token_ids)[None, ...]
     attn_mask = torch.as_tensor(attn_mask)[None, ...]
     text_embed = text_enc(token_ids=token_ids, attn_mask=attn_mask)
-    text_embed = l2_norm(text_embed)
-
-    # tot_sim = torch.empty(size=(0,))
-    # tot_image = torch.empty(size=(0, 3, 224, 224))
-    for image, _, _ in test_dl:
-        img_embed = img_enc(image)
-        faiss_idx.add(img_embed.detach().cpu().numpy())
-
-        # img_embed = l2_norm(img_embed)
-        sim_mat = (text_embed @ img_embed.T)
-
-        tot_sim = torch.cat([tot_sim, sim_mat[0]], dim=0)
-        tot_image = torch.cat([tot_image, image], dim=0)
+    # text_embed = l2_norm(text_embed)
 
     print(tot_sim)
     print(torch.max(tot_sim, dim=0))
