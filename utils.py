@@ -6,6 +6,7 @@ from datetime import timedelta
 from time import time
 from PIL import Image
 from pathlib import Path
+from collections import OrderedDict
 
 
 def load_config(yaml_path):
@@ -55,3 +56,14 @@ def image_to_grid(image, n_cols, mean, std):
 
 def l2_norm(x):
     return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
+
+
+def _modify_state_dict(state_dict, keyword="_orig_mod."):
+    new_state_dict = OrderedDict()
+    for old_key in list(state_dict.keys()):
+        if old_key and old_key.startswith(keyword):
+            new_key = old_key[len(keyword):]
+        else:
+            new_key = old_key
+        new_state_dict[new_key] = state_dict[old_key]
+    return new_state_dict

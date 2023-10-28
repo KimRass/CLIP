@@ -7,7 +7,7 @@ from time import time
 from pathlib import Path
 import wandb
 
-from utils import load_config, get_device, get_elapsed_time
+from utils import load_config, get_device, get_elapsed_time, _modify_state_dict
 from tokenizer import get_tokenizer
 from flickr import FlickrDataset, DataCollatorForDynamicPadding
 from clip import CLIP
@@ -55,6 +55,7 @@ def get_clip(config, max_len, device):
         text_mlp_dim=config["ARCHITECTURE"]["TEXT_ENC"]["MLP_DIM"],
         embed_dim=config["ARCHITECTURE"]["EMBED_DIM"],
     ).to(device)
+    clip = torch.compile(clip)
     clip.train()
     return clip
 
@@ -114,8 +115,8 @@ def save_checkpoint(epoch, clip, optim, scaler, save_path):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     state_dict = {
         # "epoch": epoch,
-        "image_encoder": clip.img_enc.state_dict(),
-        "text_encoder": clip.text_enc.state_dict(),
+        "image_encoder": _modify_state_dict(clip.img_enc.state_dict()),
+        "text_encoder": _modify_state_dict(clip.text_enc.state_dict()),
         # "temperature": clip.temp.item(),
         # "optimizer": optim.state_dict(),
     }
