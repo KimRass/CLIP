@@ -153,7 +153,7 @@ def get_dls(flickr8k_dir, flickr30k_dir, tokenizer, max_len, batch_size, n_cpus)
         collate_fn=collator,
     )
 
-    print("Train set size: {train_size:,}, validation set size: {val_size:,}")
+    print(f"Train set size: {train_size:,}, validation set size: {val_size:,}")
     return train_dl, val_dl
 
 
@@ -241,3 +241,4 @@ if __name__ == "__main__":
                 scaler=scaler,
                 save_path=SAVE_DIR/"epoch_{epoch}.pth",
             )
+            max_avg_acc = avg_acc
