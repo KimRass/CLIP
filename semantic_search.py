@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-from transformers import DistilBertTokenizerFast
 from pathlib import Path
 from utils import l2_norm
 

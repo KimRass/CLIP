@@ -103,7 +103,7 @@ def validate(val_dl, clip, metric):
         img_embed, text_embed = clip(image=image, token_ids=token_ids, attn_mask=attn_mask)
         acc = metric(img_embed=img_embed, text_embed=text_embed)
 
-        accum_acc += acc.item()
+        accum_acc += acc
     avg_acc = accum_acc / len(val_dl)
 
     clip.train()
