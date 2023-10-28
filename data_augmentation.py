@@ -6,7 +6,8 @@ import torchvision.transforms as T
 def _get_kernel_size(img_size):
     return round(img_size * 0.1) // 2 * 2 + 1
 
-def get_image_transformer(img_size):
+
+def get_train_transformer(img_size):
     kernel_size = _get_kernel_size(img_size)
     transformer = T.Compose(
         [
@@ -22,6 +23,16 @@ def get_image_transformer(img_size):
             T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ]
     )
+    return transformer
+
+
+def get_val_transformer(img_size):
+    transformer = T.Compose([
+        T.Resize(size=img_size),
+        T.CenterCrop(size=img_size),
+        T.ToTensor(),
+        T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
+    ])
     return transformer
 
 

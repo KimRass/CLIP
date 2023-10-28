@@ -10,6 +10,7 @@ import wandb
 from utils import load_config, get_device, get_elapsed_time, _modify_state_dict
 from tokenizer import get_tokenizer
 from flickr import FlickrDataset, DataCollatorForDynamicPadding
+from data_augmentation import get_val_transformer
 from clip import CLIP
 from loss import CLIPLoss
 from evaluate import TopKAccuracy
@@ -131,9 +132,12 @@ def get_dls(flickr8k_dir, flickr30k_dir, tokenizer, max_len, img_size, batch_siz
     ds1 = FlickrDataset(data_dir=flickr8k_dir, tokenizer=tokenizer, max_len=max_len, img_size=img_size)
     ds2 = FlickrDataset(data_dir=flickr30k_dir, tokenizer=tokenizer, max_len=max_len, img_size=img_size)
     ds = ds1 + ds2
+
     train_size = round(len(ds) * 0.9)
     val_size = len(ds) - train_size
     train_ds, val_ds = random_split(ds, [train_size, val_size])
+    val_ds.transformer = get_val_transformer
+
     collator = DataCollatorForDynamicPadding(tokenizer=tokenizer)
     train_dl = DataLoader(
         train_ds,

@@ -11,7 +11,7 @@ import re
 from collections import defaultdict
 import random
 
-from data_augmentation import get_image_transformer
+from data_augmentation import get_train_transformer
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -39,7 +39,7 @@ class FlickrDataset(Dataset):
         self.images_dir = self.data_dir/"Images"
         self.img_paths = sorted(list(map(str, self.images_dir.glob("**/*.jpg"))))
 
-        self.transformer = get_image_transformer(img_size=img_size)
+        self.transformer = get_train_transformer(img_size=img_size)
 
         self.captions = defaultdict(list)
         with open(self.data_dir/"captions.txt", mode="r") as f:
