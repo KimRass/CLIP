@@ -4,13 +4,14 @@
 
 import torch
 from torch.utils.data import Dataset
-import torchvision.transforms as T
 from pathlib import Path
 import os
 from PIL import Image
 import re
 from collections import defaultdict
 import random
+
+from data_augmentation import get_image_transformer
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -28,7 +29,7 @@ def encode(text, tokenizer, max_len):
 
 
 class FlickrDataset(Dataset):
-    def __init__(self, data_dir, tokenizer, max_len):
+    def __init__(self, data_dir, tokenizer, max_len, img_size):
         super().__init__()
 
         self.data_dir = Path(data_dir)
@@ -38,12 +39,7 @@ class FlickrDataset(Dataset):
         self.images_dir = self.data_dir/"Images"
         self.img_paths = sorted(list(map(str, self.images_dir.glob("**/*.jpg"))))
 
-        self.transforms = T.Compose([
-            T.Resize(size=224),
-            T.CenterCrop(size=224),
-            T.ToTensor(),
-            T.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
-        ])
+        self.transformer = get_image_transformer(img_size=img_size)
 
         self.captions = defaultdict(list)
         with open(self.data_dir/"captions.txt", mode="r") as f:
@@ -62,7 +58,7 @@ class FlickrDataset(Dataset):
     def __getitem__(self, idx):
         img_path = self.img_paths[idx]
         image = Image.open(img_path)
-        image = self.transforms(image)
+        image = self.transformer(image)
 
         texts = self.captions[img_path]
         text = random.choice(texts)
