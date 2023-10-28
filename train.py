@@ -126,9 +126,9 @@ def save_checkpoint(epoch, clip, optim, scaler, save_path):
     print("Saved the checkpoint.")
 
 
-def get_dls(flickr8k_dir, flickr30k_dir, tokenizer, max_len, batch_size, n_cpus):
-    ds1 = FlickrDataset(data_dir=flickr8k_dir, tokenizer=tokenizer, max_len=max_len)
-    ds2 = FlickrDataset(data_dir=flickr30k_dir, tokenizer=tokenizer, max_len=max_len)
+def get_dls(flickr8k_dir, flickr30k_dir, tokenizer, max_len, img_size, batch_size, n_cpus):
+    ds1 = FlickrDataset(data_dir=flickr8k_dir, tokenizer=tokenizer, max_len=max_len, img_size=img_size)
+    ds2 = FlickrDataset(data_dir=flickr30k_dir, tokenizer=tokenizer, max_len=max_len, img_size=img_size)
     ds = ds1 + ds2
     train_size = round(len(ds) * 0.9)
     val_size = len(ds) - train_size
@@ -172,6 +172,7 @@ if __name__ == "__main__":
         flickr30k_dir=args.flickr30k_dir,
         tokenizer=tokenizer,
         max_len=args.max_len,
+        img_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
         batch_size=args.batch_size,
         n_cpus=args.n_cpus,
     )

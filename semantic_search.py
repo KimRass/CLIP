@@ -28,7 +28,10 @@ if __name__ == "__main__":
 
     tokenizer = get_tokenizer()
     test_ds = FlickrDataset(
-        data_dir="/Users/jongbeomkim/Documents/datasets/flickr8k_subset", tokenizer=tokenizer, max_len=max_len,
+        data_dir="/Users/jongbeomkim/Documents/datasets/flickr8k_subset",
+        tokenizer=tokenizer,
+        max_len=max_len,
+        img_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
     )
     collator = DataCollatorForDynamicPadding(tokenizer=tokenizer)
     test_dl = DataLoader(
