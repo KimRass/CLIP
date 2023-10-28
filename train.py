@@ -129,7 +129,8 @@ def save_checkpoint(epoch, clip, optim, scaler, save_path):
 def get_dls(flickr8k_dir, flickr30k_dir, tokenizer, max_len, batch_size, n_cpus):
     ds1 = FlickrDataset(data_dir=flickr8k_dir, tokenizer=tokenizer, max_len=max_len)
     ds2 = FlickrDataset(data_dir=flickr30k_dir, tokenizer=tokenizer, max_len=max_len)
-    ds = ConcatDataset(ds1, ds2)
+    # ds = ConcatDataset([ds1, ds2])
+    ds = ds1 + ds2
     train_size = round(len(ds) * 0.9)
     val_size = len(ds) - train_size
     train_ds, val_ds = random_split(ds, [train_size, val_size])
