@@ -1,6 +1,6 @@
 import torch
 from torch.optim import AdamW
-from torch.utils.data import DataLoader, ConcatDataset, random_split
+from torch.utils.data import DataLoader, random_split
 from torch.cuda.amp import GradScaler
 import argparse
 from time import time
@@ -129,7 +129,6 @@ def save_checkpoint(epoch, clip, optim, scaler, save_path):
 def get_dls(flickr8k_dir, flickr30k_dir, tokenizer, max_len, batch_size, n_cpus):
     ds1 = FlickrDataset(data_dir=flickr8k_dir, tokenizer=tokenizer, max_len=max_len)
     ds2 = FlickrDataset(data_dir=flickr30k_dir, tokenizer=tokenizer, max_len=max_len)
-    # ds = ConcatDataset([ds1, ds2])
     ds = ds1 + ds2
     train_size = round(len(ds) * 0.9)
     val_size = len(ds) - train_size
@@ -153,6 +152,8 @@ def get_dls(flickr8k_dir, flickr30k_dir, tokenizer, max_len, batch_size, n_cpus)
         drop_last=True,
         collate_fn=collator,
     )
+
+    print("Train set size: {train_size:,}, validation set size: {val_size:,}")
     return train_dl, val_dl
 
 
@@ -232,11 +233,11 @@ if __name__ == "__main__":
             step=epoch,
         )
 
-    if avg_acc > max_avg_acc:
-        save_checkpoint(
-            epoch=epoch,
-            clip=clip,
-            optim=optim,
-            scaler=scaler,
-            save_path=SAVE_DIR/"epoch_{epoch}.pth",
-        )
+        if avg_acc > max_avg_acc:
+            save_checkpoint(
+                epoch=epoch,
+                clip=clip,
+                optim=optim,
+                scaler=scaler,
+                save_path=SAVE_DIR/"epoch_{epoch}.pth",
+            )
