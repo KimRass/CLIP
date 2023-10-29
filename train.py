@@ -184,6 +184,7 @@ if __name__ == "__main__":
     if args.run_id is None:
         args.run_id = wandb.run.name
     wandb.config.update(CONFIG, allow_val_change=True)
+    wandb.config.update(args, allow_val_change=True)
     print(wandb.config)
 
     tokenizer = get_tokenizer()
