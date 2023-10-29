@@ -7,7 +7,7 @@ from time import time
 from pathlib import Path
 import wandb
 
-from utils import load_config, get_device, get_elapsed_time, _modify_state_dict, get_gpu_ok
+from utils import load_config, get_device, get_elapsed_time, _modify_state_dict
 from tokenizer import get_tokenizer
 from flickr import FlickrDataset, DataCollatorForDynamicPadding
 from data_augmentation import get_val_transformer
@@ -35,13 +35,14 @@ def get_args():
     # "We use a very large minibatch size of 32,768."
     parser.add_argument("--batch_size", type=int, required=False, default=32_768)
     parser.add_argument("--max_len", type=int, required=True)
+    parser.add_argument("--torch_compile", action="store_true", required=False)
     parser.add_argument("--run_id", type=str, required=False)
 
     args = parser.parse_args()
     return args
 
 
-def get_clip(config, max_len, device, gpu_ok):
+def get_clip(config, max_len, device, torch_compile=False):
     clip = CLIP(
         img_size=config["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
         patch_size=config["ARCHITECTURE"]["IMG_ENC"]["PATCH_SIZE"],
@@ -57,7 +58,7 @@ def get_clip(config, max_len, device, gpu_ok):
         text_mlp_dim=config["ARCHITECTURE"]["TEXT_ENC"]["MLP_DIM"],
         embed_dim=config["ARCHITECTURE"]["EMBED_DIM"],
     ).to(device)
-    if gpu_ok:
+    if torch_compile:
         clip = torch.compile(clip)
     clip.train()
     return clip
@@ -175,9 +176,6 @@ def get_dls(flickr8k_dir, flickr30k_dir, tokenizer, max_len, img_size, batch_siz
 
 
 if __name__ == "__main__":
-    gpu_ok = get_gpu_ok()
-    # gpu_ok = False
-
     args = get_args()
 
     run = wandb.init(project="CLIP", resume=args.run_id)
@@ -198,7 +196,7 @@ if __name__ == "__main__":
         n_cpus=args.n_cpus,
     )
 
-    clip = get_clip(config=CONFIG, max_len=args.max_len, device=DEVICE, gpu_ok=gpu_ok)
+    clip = get_clip(config=CONFIG, max_len=args.max_len, device=DEVICE, torch_compile=args.torch_compile)
     crit = CLIPLoss(batch_size=args.batch_size, temp=clip.temp)
     metric = TopKAccuracy(k=1, batch_size=args.batch_size)
 
