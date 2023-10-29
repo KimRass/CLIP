@@ -22,7 +22,8 @@ class CLIPLoss(nn.Module):
         self.gt = self.gt.to(img_embed.device)
         img_loss = F.cross_entropy(sim_mat, self.gt, reduction="mean")
         text_loss = F.cross_entropy(sim_mat.T, self.gt, reduction="mean")
-        return img_loss, text_loss
+        tot_loss = (img_loss + text_loss) / 2
+        return tot_loss
 
 
 if __name__ == "__main__":

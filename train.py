@@ -22,6 +22,7 @@ DEVICE = get_device()
 
 PARENT_DIR = Path(__file__).resolve().parent
 SAVE_DIR = PARENT_DIR/"checkpoints"
+WANDB_CKPT_PATH = SAVE_DIR/"checkpoint.tar"
 
 
 def get_args():
@@ -74,23 +75,22 @@ def train_single_step(image, token_ids, attn_mask, clip, crit, optim, scaler):
         enabled=True,
     ):
         img_embed, text_embed = clip(image=image, token_ids=token_ids, attn_mask=attn_mask)
-        img_loss, text_loss = crit(img_embed=img_embed, text_embed=text_embed)
-        tot_loss = (img_loss + text_loss) / 2
+        loss = crit(img_embed=img_embed, text_embed=text_embed)
 
     optim.zero_grad()
     if DEVICE.type == "cuda" and scaler is not None:
-        scaler.scale(tot_loss).backward()
+        scaler.scale(loss).backward()
         scaler.step(optim)
         scaler.update()
     else:
-        tot_loss.backward()
+        loss.backward()
         optim.step()
 
     # "The learnable temperature parameter was clipped to prevent scaling the logits by more than 100
     # which we found necessary to prevent training instability."
     with torch.no_grad():
         clip.temp.clamp_(max=100)
-    return img_loss, text_loss
+    return loss
 
 
 @torch.no_grad()
@@ -113,20 +113,30 @@ def validate(val_dl, clip, metric):
     return avg_acc
 
 
-def save_checkpoint(epoch, clip, optim, scaler, save_path):
+def save_checkpoint(clip, save_path):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     state_dict = {
-        # "epoch": epoch,
         "image_encoder": _modify_state_dict(clip.img_enc.state_dict()),
         "text_encoder": _modify_state_dict(clip.text_enc.state_dict()),
-        # "temperature": clip.temp.item(),
-        # "optimizer": optim.state_dict(),
     }
-    # if scaler is not None:
-    #     state_dict["scaler"] = scaler.state_dict()
     torch.save(state_dict, str(save_path))
-    # wandb.save(str(save_path), base_path=Path(save_path).parent)
     print("Saved the checkpoint.")
+
+
+def save_wandb_checkpoint(epoch, clip, optim, scaler, max_avg_acc, save_path):
+    Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+    state_dict = {
+        "epoch": epoch,
+        "image_encoder": _modify_state_dict(clip.img_enc.state_dict()),
+        "text_encoder": _modify_state_dict(clip.text_enc.state_dict()),
+        "temperature": clip.temp.item(),
+        "optimizer": optim.state_dict(),
+        "max_average_accuracy": max_avg_acc,
+    }
+    if scaler is not None:
+        state_dict["scaler"] = scaler.state_dict()
+    torch.save(state_dict, str(save_path))
+    wandb.save(str(save_path), base_path=Path(save_path).parent)
 
 
 def get_dls(flickr8k_dir, flickr30k_dir, tokenizer, max_len, img_size, batch_size, n_cpus):
@@ -137,7 +147,7 @@ def get_dls(flickr8k_dir, flickr30k_dir, tokenizer, max_len, img_size, batch_siz
     train_size = round(len(ds) * 0.9)
     val_size = len(ds) - train_size
     train_ds, val_ds = random_split(ds, [train_size, val_size])
-    train_ds.transformer = get_val_transformer
+    # train_ds.transformer = get_val_transformer
     val_ds.transformer = get_val_transformer
 
     collator = DataCollatorForDynamicPadding(tokenizer=tokenizer)
@@ -202,14 +212,29 @@ if __name__ == "__main__":
 
     scaler = GradScaler() if DEVICE.type == "cuda" else None
 
-    init_epoch = 0
-    max_avg_acc = 0
+    ### Resume
+    if wandb.run.resumed:
+        state_dict = torch.load(str(WANDB_CKPT_PATH), map_location=DEVICE)
+        init_epoch = state_dict["epoch"]
+        clip.img_enc.load_state_dict(state_dict["image_encoder"])
+        clip.text_enc.load_state_dict(state_dict["text_encoder"])
+        optim.load_state_dict(state_dict["optimizer"])
+        scaler.load_state_dict(state_dict["scaler"])
+        max_avg_acc = state_dict["max_average_accuracy"]
+
+        prev_ckpt_path = str(WANDB_CKPT_PATH)
+
+        print(f"Resuming from epoch {init_epoch + 1}...")
+    else:
+        init_epoch = 0
+        prev_ckpt_path = ".pth"
+        max_avg_acc = 0
+
     for epoch in range(init_epoch + 1, args.n_epochs + 1):
         start_time = time()
-        accum_img_loss = 0
-        accum_text_loss = 0
+        accum_loss = 0
         for image, token_ids, attn_mask in train_dl:
-            img_loss, text_loss = train_single_step(
+            loss = train_single_step(
                 image=image,
                 token_ids=token_ids,
                 attn_mask=attn_mask,
@@ -218,38 +243,37 @@ if __name__ == "__main__":
                 optim=optim,
                 scaler=scaler,
             )
-            accum_img_loss += img_loss.item()
-            accum_text_loss += text_loss.item()
+            accum_loss += loss.item()
 
-        avg_img_loss = accum_img_loss / len(train_dl)
-        avg_text_loss = accum_text_loss / len(train_dl)
+        avg_loss = accum_loss / len(train_dl)
 
         avg_acc = validate(val_dl=val_dl, clip=clip, metric=metric)
 
         msg = f"[ {get_elapsed_time(start_time)} ]"
         msg += f"""[ {epoch}/{args.n_epochs} ]"""
-        msg += f"""[ Image loss: {avg_img_loss:.4f} ]"""
-        msg += f"""[ Text loss: {avg_text_loss:.4f} ]"""
+        msg += f"""[ Loss: {avg_loss:.4f} ]"""
         msg += f"""[ Temperature: {clip.temp.item():.4f} ]"""
         msg += f"""[ Accuracy: {avg_acc:.4f} ]"""
         print(msg)
 
         wandb.log(
-            {
-                "Image loss": avg_img_loss,
-                "Text loss": avg_text_loss,
-                "Temperature": clip.temp.item(),
-                "Accuracy": avg_acc,
-            },
+            {"Loss": avg_loss, "Temperature": clip.temp.item(), "Validation accuracy": avg_acc},
             step=epoch,
         )
 
         if avg_acc > max_avg_acc:
-            save_checkpoint(
-                epoch=epoch,
-                clip=clip,
-                optim=optim,
-                scaler=scaler,
-                save_path=SAVE_DIR/f"epoch_{epoch}.pth",
-            )
+            cur_ckpt_path = SAVE_DIR/f"{args.run_id}_epoch_{epoch}.pth"
+            save_checkpoint(clip=clip, save_path=cur_ckpt_path)
+
             max_avg_acc = avg_acc
+            Path(prev_ckpt_path).unlink(missing_ok=True)
+            prev_ckpt_path = cur_ckpt_path
+
+        save_wandb_checkpoint(
+            epoch=epoch,
+            clip=clip,
+            optim=optim,
+            scaler=scaler,
+            max_avg_acc=max_avg_acc,
+            save_path=WANDB_CKPT_PATH
+        )
