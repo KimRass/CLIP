@@ -175,8 +175,8 @@ def get_dls(flickr8k_dir, flickr30k_dir, tokenizer, max_len, img_size, batch_siz
 
 
 if __name__ == "__main__":
-    # gpu_ok = get_gpu_ok()
-    gpu_ok = False
+    gpu_ok = get_gpu_ok()
+    # gpu_ok = False
 
     args = get_args()
 
