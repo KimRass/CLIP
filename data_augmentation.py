@@ -11,7 +11,7 @@ def get_train_transformer(img_size):
     kernel_size = _get_kernel_size(img_size)
     transformer = T.Compose(
         [
-            T.RandomResizedCrop(size=img_size, scale=(0.5, 1), ratio=(3 / 4, 4 / 3), antialias=True),
+            T.RandomResizedCrop(size=img_size, scale=(0.6, 1), ratio=(3 / 4, 4 / 3), antialias=True),
             T.RandomHorizontalFlip(p=0.5),
             T.RandomApply(
                 [T.ColorJitter(brightness=0.6, contrast=0.6, saturation=0.6, hue=0.05)], p=0.8,

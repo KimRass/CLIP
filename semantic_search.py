@@ -48,30 +48,25 @@ if __name__ == "__main__":
         collate_fn=collator,
     )
 
-    # tot_sim = torch.empty(size=(0,))
-    # tot_image = torch.empty(size=(0, 3, 224, 224))
+    tot_image = torch.empty(size=(0, 3, 224, 224))
     for image, _, _ in test_dl:
         img_embed = img_enc(image)
         faiss_idx.add(img_embed.detach().cpu().numpy())
 
-        # # img_embed = l2_norm(img_embed)
-        # sim_mat = (text_embed @ img_embed.T)
-
-        # tot_sim = torch.cat([tot_sim, sim_mat[0]], dim=0)
-        # tot_image = torch.cat([tot_image, image], dim=0)
+        tot_image = torch.cat([tot_image, image], dim=0)
 
     # query = "A German Shepherd chases another with a stick in his mouth ."
-    query = "A group of people paddle their blue inflatable raft down the rapids ."
+    # query = "A group of people paddle their blue inflatable raft down the rapids ."
+    query = "A little blonde boy is petting a resting tiger ."
     token_ids = encode(query, tokenizer=tokenizer, max_len=max_len)
     attn_mask = [1] * len(token_ids)
     token_ids = torch.as_tensor(token_ids)[None, ...]
     attn_mask = torch.as_tensor(attn_mask)[None, ...]
     text_embed = text_enc(token_ids=token_ids, attn_mask=attn_mask)
-    # text_embed = l2_norm(text_embed)
+    
+    D, I = faiss_idx.search(text_embed.detach().cpu().numpy(), 1)
 
-    print(tot_sim)
-    print(torch.max(tot_sim, dim=0))
-    # print(torch.argmax(tot_sim, dim=0).item())
-    tot_image[0, 0, 0, 0]
-    grid = image_to_grid(image=tot_image, n_cols=4, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+    rank = 1
+    trg_image = tot_image[I[0][rank - 1]]
+    grid = image_to_grid(image=trg_image.unsqueeze(0), n_cols=4, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
     grid.show()
