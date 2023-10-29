@@ -15,6 +15,25 @@ CONFIG = load_config(Path(__file__).parent/"config.yaml")
 
 DEVICE = get_device()
 
+
+def add_to_faiss_index(faiss_idx, dl, img_enc):
+    print(f"There are {faiss_idx.ntotal:,} vectors in total in the DB")
+    for image, _, _ in dl:
+        img_embed = img_enc(image)
+        faiss_idx.add(img_embed.detach().cpu().numpy())
+    print(f"There are {faiss_idx.ntotal:,} vectors in total in the DB")
+
+
+def text_to_embedding(text, text_enc):
+    token_ids = encode(text, tokenizer=tokenizer, max_len=max_len)
+    attn_mask = [1] * len(token_ids)
+
+    token_ids = torch.as_tensor(token_ids)[None, ...]
+    attn_mask = torch.as_tensor(attn_mask)[None, ...]
+    text_embed = text_enc(token_ids=token_ids, attn_mask=attn_mask)
+    return text_embed
+
+
 if __name__ == "__main__":
     faiss_idx = faiss.IndexFlatL2(CONFIG["ARCHITECTURE"]["EMBED_DIM"])
 
@@ -48,23 +67,17 @@ if __name__ == "__main__":
         collate_fn=collator,
     )
 
-    tot_image = torch.empty(size=(0, 3, 224, 224))
-    for image, _, _ in test_dl:
-        img_embed = img_enc(image)
-        faiss_idx.add(img_embed.detach().cpu().numpy())
 
-        tot_image = torch.cat([tot_image, image], dim=0)
+
+    # tot_image = torch.empty(size=(0, 3, 224, 224))
+        # tot_image = torch.cat([tot_image, image], dim=0)
 
     # query = "A German Shepherd chases another with a stick in his mouth ."
     # query = "A group of people paddle their blue inflatable raft down the rapids ."
     query = "A little blonde boy is petting a resting tiger ."
-    token_ids = encode(query, tokenizer=tokenizer, max_len=max_len)
-    attn_mask = [1] * len(token_ids)
-    token_ids = torch.as_tensor(token_ids)[None, ...]
-    attn_mask = torch.as_tensor(attn_mask)[None, ...]
-    text_embed = text_enc(token_ids=token_ids, attn_mask=attn_mask)
-    
-    D, I = faiss_idx.search(text_embed.detach().cpu().numpy(), 1)
+    query_text_embed = text_to_embedding(query, text_enc=text_enc)
+        
+    distances, indices = faiss_idx.search(text_embed.detach().cpu().numpy(), 1)
 
     rank = 1
     trg_image = tot_image[I[0][rank - 1]]

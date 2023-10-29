@@ -181,6 +181,7 @@ if __name__ == "__main__":
     run = wandb.init(project="CLIP", resume=args.run_id)
     if args.run_id is None:
         args.run_id = wandb.run.name
+    wandb.config.update({"max_len": args.max_len, "run_id": args.run_id}, allow_val_change=True)
     wandb.config.update(CONFIG, allow_val_change=True)
     print(wandb.config)
 
