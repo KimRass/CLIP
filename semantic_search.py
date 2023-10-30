@@ -1,13 +1,16 @@
+# References:
+    # https://github.com/facebookresearch/faiss/wiki/Getting-started
+
 import torch
-import torch.nn as nn
 from torch.utils.data import DataLoader
 from pathlib import Path
-from utils import l2_norm
+import numpy as np
 import faiss
+from tqdm import tqdm
 
 from utils import load_config, get_device, image_to_grid
 from tokenizer import get_tokenizer
-from flickr import FlickrDataset, DataCollatorForDynamicPadding, encode
+from flickr import ImageDataset, encode
 from train import get_clip
 
 # CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/CONFIG.yaml")
@@ -16,12 +19,25 @@ CONFIG = load_config(Path(__file__).parent/"config.yaml")
 DEVICE = get_device()
 
 
-def add_to_faiss_index(faiss_idx, dl, img_enc):
+def _add_to_faiss_index(faiss_idx, dl, img_enc):
     print(f"There are {faiss_idx.ntotal:,} vectors in total in the DB")
-    for image, _, _ in dl:
+    img_embeds = list()
+    indices = list()
+    for idx, image in enumerate(tqdm(dl)):
         img_embed = img_enc(image)
-        faiss_idx.add(img_embed.detach().cpu().numpy())
+        img_embeds.append(img_embed.detach().cpu().numpy())
+        indices.append(idx)
+    xb = np.concatenate(img_embeds)
+    faiss.normalize_L2(xb)
+    faiss_idx.add_with_ids(xb, np.arange(xb.shape[0]))
     print(f"There are {faiss_idx.ntotal:,} vectors in total in the DB")
+
+
+def save_faiss_index(dim, dl, img_enc, save_path):
+    faiss_idx = faiss.IndexFlatIP(dim) # Inner product
+    faiss_idx = faiss.IndexIDMap2(faiss_idx)
+    _add_to_faiss_index(faiss_idx=faiss_idx, dl=dl, img_enc=img_enc)
+    faiss.write_index(faiss_idx, save_path)
 
 
 def text_to_embedding(text, text_enc):
@@ -35,51 +51,51 @@ def text_to_embedding(text, text_enc):
 
 
 if __name__ == "__main__":
-    faiss_idx = faiss.IndexFlatL2(CONFIG["ARCHITECTURE"]["EMBED_DIM"])
-
     max_len = 128
     clip = get_clip(config=CONFIG, max_len=max_len, device=DEVICE)
     clip.eval()
     img_enc = clip.img_enc
     text_enc = clip.text_enc
 
-    ckpt_path = "/Users/jongbeomkim/Documents/clip/checkpoints/epoch_128.pth"
+    ckpt_path = "/Users/jongbeomkim/Documents/clip/checkpoints/clip_flickr_200.pth"
     state_dict = torch.load(ckpt_path, map_location=DEVICE)
     img_enc.load_state_dict(state_dict["image_encoder"])
     text_enc.load_state_dict(state_dict["text_encoder"])
-    temp = state_dict["temperature"]
 
     tokenizer = get_tokenizer()
-    test_ds = FlickrDataset(
-        data_dir="/Users/jongbeomkim/Documents/datasets/flickr8k_subset",
-        tokenizer=tokenizer,
-        max_len=max_len,
+    ds = ImageDataset(
+        data_dir="/Users/jongbeomkim/Documents/datasets/flickr8k",
         img_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
     )
-    collator = DataCollatorForDynamicPadding(tokenizer=tokenizer)
-    test_dl = DataLoader(
-        test_ds,
+    dl = DataLoader(
+        ds,
         batch_size=8,
         shuffle=False,
         num_workers=0,
         pin_memory=True,
         drop_last=False,
-        collate_fn=collator,
     )
 
+    index_path = "/Users/jongbeomkim/Downloads/flickr8k.index"
+    if Path(index_path).exists():
+        faiss_idx = faiss.read_index(index_path)
+    else:
+        save_faiss_index(
+            dim=CONFIG["ARCHITECTURE"]["EMBED_DIM"],
+            dl=dl,
+            img_enc=img_enc,
+            save_path=index_path,
+        )
 
-
-    # tot_image = torch.empty(size=(0, 3, 224, 224))
-        # tot_image = torch.cat([tot_image, image], dim=0)
-
-    # query = "A German Shepherd chases another with a stick in his mouth ."
-    # query = "A group of people paddle their blue inflatable raft down the rapids ."
-    query = "A little blonde boy is petting a resting tiger ."
+    query = "The children are playing happily with water."
     query_text_embed = text_to_embedding(query, text_enc=text_enc)
-        
-    distances, indices = faiss_idx.search(text_embed.detach().cpu().numpy(), 1)
+    xq = query_text_embed.detach().cpu().numpy()
+    faiss.normalize_L2(xq)
+    distances, indices = faiss_idx.search(xq, 1)
+    print(f"Cosine similarity: {distances[0][0]:.3f}")
 
-    rank = 1
-    trg_image = tot_image[I[0][rank - 1]]
-    grid = image_to_grid(image=trg_image.unsqueeze(0), n_cols=4, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+    trg_image = ds[indices[0][0]]
+    grid = image_to_grid(
+        image=trg_image.unsqueeze(0), n_cols=1, mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225),
+    )
     grid.show()

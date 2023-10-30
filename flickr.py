@@ -11,7 +11,7 @@ import re
 from collections import defaultdict
 import random
 
-from data_augmentation import get_train_transformer
+from data_augmentation import get_train_transformer, get_val_transformer
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -98,3 +98,24 @@ class DataCollatorForDynamicPadding(object):
         token_ids = torch.as_tensor(ls_token_ids)
         attn_mask = self._get_attention_mask(token_ids)
         return image, token_ids, attn_mask
+
+
+class ImageDataset(Dataset):
+    def __init__(self, data_dir, img_size):
+        super().__init__()
+
+        self.data_dir = Path(data_dir)
+
+        self.images_dir = self.data_dir/"Images"
+        self.img_paths = sorted(list(map(str, self.images_dir.glob("**/*.jpg"))))
+
+        self.transformer = get_val_transformer(img_size=img_size)
+
+    def __len__(self):
+        return len(self.img_paths)
+
+    def __getitem__(self, idx):
+        img_path = self.img_paths[idx]
+        image = Image.open(img_path)
+        image = self.transformer(image)
+        return image
