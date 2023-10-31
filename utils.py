@@ -8,6 +8,21 @@ from PIL import Image
 from pathlib import Path
 from collections import OrderedDict
 import warnings
+import random
+import numpy as np
+import os
+
+
+def apply_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+    torch.use_deterministic_algorithms(True)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
 
 
 def load_config(yaml_path):

@@ -7,7 +7,7 @@ from time import time
 from pathlib import Path
 import wandb
 
-from utils import load_config, get_device, get_elapsed_time, _modify_state_dict
+from utils import apply_seed, load_config, get_device, get_elapsed_time, _modify_state_dict
 from tokenizer import get_tokenizer
 from flickr import FlickrDataset, DataCollatorForDynamicPadding
 from data_augmentation import get_val_transformer
@@ -176,6 +176,8 @@ def get_dls(flickr8k_dir, flickr30k_dir, tokenizer, max_len, img_size, batch_siz
 
 
 if __name__ == "__main__":
+    apply_seed(CONFIG.SEED)
+
     args = get_args()
 
     run = wandb.init(project="CLIP", resume=args.run_id)

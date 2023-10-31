@@ -119,3 +119,8 @@ class ImageDataset(Dataset):
         image = Image.open(img_path)
         image = self.transformer(image)
         return image
+
+
+from torchvision.datasets import CocoCaptions
+
+CocoCaptions(root="/Users/jongbeomkim/Documents/datasets", annFile="/Users/jongbeomkim/Documents/datasets"
