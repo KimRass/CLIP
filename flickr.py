@@ -121,6 +121,10 @@ class ImageDataset(Dataset):
         return image
 
 
-from torchvision.datasets import CocoCaptions
+if __name__ == "__main__":
+    from torchvision.datasets import CocoCaptions
 
-CocoCaptions(root="/Users/jongbeomkim/Documents/datasets", annFile="/Users/jongbeomkim/Documents/datasets"
+    CocoCaptions(
+        root="/Users/jongbeomkim/Documents/datasets",
+        annFile="/Users/jongbeomkim/Documents/datasets",
+    )
