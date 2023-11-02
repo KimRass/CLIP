@@ -15,7 +15,6 @@ from clip import CLIP
 from loss import CLIPLoss
 from evaluate import TopKAccuracy
 
-# CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/CONFIG.yaml")
 CONFIG = load_config(Path(__file__).parent/"config.yaml")
 
 DEVICE = get_device()
