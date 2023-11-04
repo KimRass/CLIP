@@ -11,6 +11,7 @@ import warnings
 import random
 import numpy as np
 import os
+import json
 
 
 def apply_seed(seed):
@@ -98,3 +99,10 @@ def get_gpu_ok():
             "GPU is not NVIDIA V100, A100, or H100. Speedup numbers may be lower than expected."
         )
     return gpu_ok
+
+
+def get_imagenet1k_classes(json_path):
+    with open(json_path, mode="r") as f:
+        classes = json.load(f)
+    classes = {dir_name: class_name for dir_name, class_name in classes.values()}
+    return classes

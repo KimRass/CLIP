@@ -28,6 +28,12 @@ def encode(text, tokenizer, max_len):
     return encoding["input_ids"]
 
 
+def pad(token_ids, max_len, pad_id):
+    token_ids = token_ids[: max_len]
+    token_ids += [pad_id] * (max_len - len(token_ids))
+    return token_ids
+
+
 class FlickrDataset(Dataset):
     def __init__(self, data_dir, tokenizer, max_len, img_size):
         super().__init__()
@@ -73,11 +79,6 @@ class DataCollatorForDynamicPadding(object):
         self.pad_id = tokenizer.pad_token_id
         self.sep_id = tokenizer.sep_token_id
 
-    def _pad(self, token_ids, max_len):
-        token_ids = token_ids[: max_len]
-        token_ids += [self.pad_id] * (max_len - len(token_ids))
-        return token_ids
-
     def _get_attention_mask(self, token_ids):
         return (token_ids != self.pad_id).long()
     
@@ -94,7 +95,7 @@ class DataCollatorForDynamicPadding(object):
                 max_len = token_ids_len
 
         image = torch.stack(images)
-        ls_token_ids = [self._pad(token_ids=token_ids, max_len=max_len) for token_ids in ls_token_ids]
+        ls_token_ids = [pad(token_ids=token_ids, max_len=max_len, pad_id=self.pad_id) for token_ids in ls_token_ids]
         token_ids = torch.as_tensor(ls_token_ids)
         attn_mask = self._get_attention_mask(token_ids)
         return image, token_ids, attn_mask

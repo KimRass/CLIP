@@ -58,7 +58,8 @@ class CLIP(nn.Module):
 
         # "The learnable temp parameter was initialized to the equivalent of 0.07."
         # self.temp = nn.Parameter(torch.tensor((0.07,)))
-        self.temp = nn.Parameter(torch.tensor((1,), dtype=torch.float64))
+        # self.temp = nn.Parameter(torch.tensor((1,), dtype=torch.float64))
+        self.temp = nn.Parameter(torch.tensor(1))
 
     def forward(self, image, token_ids, attn_mask):
         img_embed = self.img_enc(image)

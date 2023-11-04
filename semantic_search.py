@@ -132,7 +132,6 @@ if __name__ == "__main__":
         img_path=img_path, img_enc=img_enc, img_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
     )
 
-
     distances, indices = perform_semantic_search(query=img_path, faiss_idx=faiss_idx)
     print(f"Cosine similarity: {distances[0][0]:.3f}")
 

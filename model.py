@@ -48,3 +48,39 @@ class TextEncoder(nn.Module):
         x = x.last_hidden_state[:, 0, :]
         x = self.text_proj(x)
         return x
+
+
+class ClassificationHead(nn.Module):
+    def __init__(self, hidden_dim, n_classes):
+        super().__init__()
+
+        self.n_classes = n_classes
+
+        self.head_proj = nn.Linear(hidden_dim, n_classes)
+
+    def forward(self, x):
+        x = x[:, 0, :]
+        x = self.head_proj(x)
+        x = x.view(-1, self.n_classes)
+        return x
+
+
+class ZeroShotClassifier(nn.Module):
+    def __init__(self, img_size, patch_size, n_layers, n_heads, hidden_dim, mlp_dim, embed_dim, n_classes):
+        super().__init__()
+
+        self.img_enc = ImageEncoder(
+            img_size=img_size,
+            patch_size=patch_size,
+            n_layers=n_layers,
+            n_heads=n_heads,
+            hidden_dim=hidden_dim,
+            mlp_dim=mlp_dim,
+            embed_dim=embed_dim,
+        )
+        # Freeze parameters.
+        self.img_enc.img_proj = ClassificationHead(hidden_dim=hidden_dim, n_classes=n_classes)
+
+    def forward(self, x):
+        x = self.img_enc(x)
+        return x
