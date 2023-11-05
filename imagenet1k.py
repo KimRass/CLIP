@@ -48,8 +48,8 @@ def _img_path_to_prompt(img_path):
 #         return image, token_ids
 
 
-def get_imagenet1k_dataset(data_dir):
-    ds = ImageFolder(root=data_dir, transform=get_val_transformer)
+def get_imagenet1k_dataset(data_dir, img_size):
+    ds = ImageFolder(root=data_dir, transform=get_val_transformer(img_size))
     return ds
 
 

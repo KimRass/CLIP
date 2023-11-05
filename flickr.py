@@ -34,6 +34,10 @@ def pad(token_ids, max_len, pad_id):
     return token_ids
 
 
+def get_attention_mask(token_ids, pad_id):
+    return (token_ids != pad_id).long()
+
+
 class FlickrDataset(Dataset):
     def __init__(self, data_dir, tokenizer, max_len, img_size):
         super().__init__()
@@ -78,9 +82,6 @@ class DataCollatorForDynamicPadding(object):
 
         self.pad_id = tokenizer.pad_token_id
         self.sep_id = tokenizer.sep_token_id
-
-    def _get_attention_mask(self, token_ids):
-        return (token_ids != self.pad_id).long()
     
     def __call__(self, batch):
         images = list()
@@ -97,7 +98,7 @@ class DataCollatorForDynamicPadding(object):
         image = torch.stack(images)
         ls_token_ids = [pad(token_ids=token_ids, max_len=max_len, pad_id=self.pad_id) for token_ids in ls_token_ids]
         token_ids = torch.as_tensor(ls_token_ids)
-        attn_mask = self._get_attention_mask(token_ids)
+        attn_mask = get_attention_mask(token_ids=token_ids, pad_id=self.pad_id)
         return image, token_ids, attn_mask
 
 

@@ -12,7 +12,7 @@ from PIL import Image
 from utils import load_config, get_device, image_to_grid
 from data_augmentation import get_val_transformer
 from tokenizer import get_tokenizer
-from flickr import ImageDataset, encode
+from flickr import ImageDataset, encode, pad, get_attention_mask
 from train import get_clip
 
 # CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/CONFIG.yaml")
@@ -21,8 +21,26 @@ CONFIG = load_config(Path(__file__).parent/"config.yaml")
 DEVICE = get_device()
 
 
-def _add_to_faiss_index(faiss_idx, dl, img_enc):
-    print(f"There are {faiss_idx.ntotal:,} vectors in total in the DB")
+def _add_texts_to_faiss_index(faiss_idx, idx2text, text_enc, tokenizer, max_len):
+    print(f"There are {faiss_idx.ntotal:,} vectors in total in the DB.")
+    text_embeds = list()
+    for text in tqdm(idx2text.values()):
+        token_ids = encode(text, tokenizer=tokenizer, max_len=max_len)
+        token_ids = pad(token_ids=token_ids, max_len=max_len, pad_id=tokenizer.pad_token_id)
+        token_ids = torch.tensor(token_ids)
+        attn_mask = get_attention_mask(token_ids=token_ids, pad_id=tokenizer.pad_token_id)
+
+        text_embed = text_enc(token_ids=token_ids, attn_mask=attn_mask)
+        text_embeds.append(text_embed.detach().cpu().numpy())
+    xb = np.concatenate(text_embeds)
+    faiss.normalize_L2(xb)
+
+    faiss_idx.add_with_ids(xb, np.array(list(idx2text.keys())))
+    print(f"There are {faiss_idx.ntotal:,} vectors in total in the DB.")
+
+
+def _add_images_to_faiss_index(faiss_idx, dl, img_enc):
+    print(f"There are {faiss_idx.ntotal:,} vectors in total in the DB.")
     img_embeds = list()
     indices = list()
     for idx, image in enumerate(tqdm(dl)):
@@ -32,7 +50,7 @@ def _add_to_faiss_index(faiss_idx, dl, img_enc):
     xb = np.concatenate(img_embeds)
     faiss.normalize_L2(xb)
     faiss_idx.add_with_ids(xb, np.arange(xb.shape[0]))
-    print(f"There are {faiss_idx.ntotal:,} vectors in total in the DB")
+    print(f"There are {faiss_idx.ntotal:,} vectors in total in the DB.")
 
 
 def load_faiss_index(index_path):
@@ -46,7 +64,7 @@ def load_faiss_index(index_path):
 def save_faiss_index(dim, dl, img_enc, save_path):
     faiss_idx = faiss.IndexFlatIP(dim) # Inner product
     faiss_idx = faiss.IndexIDMap2(faiss_idx)
-    _add_to_faiss_index(faiss_idx=faiss_idx, dl=dl, img_enc=img_enc)
+    _add_images_to_faiss_index(faiss_idx=faiss_idx, dl=dl, img_enc=img_enc)
     faiss.write_index(faiss_idx, save_path)
 
 

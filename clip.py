@@ -37,6 +37,10 @@ class CLIP(nn.Module):
     ):
         super().__init__()
 
+        self.img_size= img_size
+        self.max_len = max_len
+        self.embed_dim = embed_dim
+
         self.img_enc = ImageEncoder(
             img_size=img_size,
             patch_size=patch_size,
@@ -59,7 +63,7 @@ class CLIP(nn.Module):
         # "The learnable temp parameter was initialized to the equivalent of 0.07."
         # self.temp = nn.Parameter(torch.tensor((0.07,)))
         # self.temp = nn.Parameter(torch.tensor((1,), dtype=torch.float64))
-        self.temp = nn.Parameter(torch.tensor(1))
+        self.temp = nn.Parameter(torch.tensor(1, dtype=torch.float64))
 
     def forward(self, image, token_ids, attn_mask):
         img_embed = self.img_enc(image)
