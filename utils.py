@@ -102,7 +102,9 @@ def get_gpu_ok():
 
 
 def get_imagenet1k_classes(json_path):
+    json_path = "/Users/jongbeomkim/Desktop/workspace/CLIP/imagenet1k_classes.json"
     with open(json_path, mode="r") as f:
         classes = json.load(f)
-    classes = {dir_name: class_name for dir_name, class_name in classes.values()}
+    classes = {k[0]: class_name for dir_name, class_name in classes.items()}
+    # classes = {dir_name: class_name for dir_name, class_name in classes.values()}
     return classes
