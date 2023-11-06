@@ -3,3 +3,15 @@
 ## Pretrained Model
 - CLIP trained on Flickr8k + Flickr30k for 200 epochs
     - [clip_flickr.pth](https://drive.google.com/file/d/1BEKphn5BULRIMYJr5JT5_p2W8sYzJKHO/view?usp=drive_link)
+## Zero-shot Classification on ImageNet1k Dataset
+```bash
+# e.g.,
+python3 zero_shot_classification.py\
+    --data_dir="/Users/jongbeomkim/Documents/datasets/imagenet-mini"\
+    --ckpt_path="/Users/jongbeomkim/Documents/clip/checkpoints/clip_flickr.pth"\
+    --batch_size=16\
+    --n_cpus=4\ # Optional
+    --max_len=128\ # Optional
+    --k=10 # Optional
+```
+- Top-10 accuracy on train + validation set: 3.0%

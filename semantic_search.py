@@ -15,14 +15,21 @@ from tokenizer import get_tokenizer
 from flickr import ImageDataset, encode, pad, get_attention_mask
 from train import get_clip
 
-# CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/CONFIG.yaml")
-CONFIG = load_config(Path(__file__).parent/"config.yaml")
 
-DEVICE = get_device()
+def get_encoders_from_checkpoint(ckpt_path, config, max_len, device):
+    clip = get_clip(config=config, max_len=max_len, device=device)
+    img_enc = clip.img_enc
+    text_enc = clip.text_enc
+
+    state_dict = torch.load(ckpt_path, map_location=device)
+    img_enc.load_state_dict(state_dict["image_encoder"])
+    text_enc.load_state_dict(state_dict["text_encoder"])
+    return img_enc, text_enc
 
 
-def _add_texts_to_faiss_index(faiss_idx, idx2text, text_enc, tokenizer, max_len):
+def add_texts_to_faiss_index(faiss_idx, idx2text, text_enc, tokenizer, max_len):
     print(f"There are {faiss_idx.ntotal:,} vectors in total in the DB.")
+
     text_embeds = list()
     for text in tqdm(idx2text.values()):
         token_ids = encode(text, tokenizer=tokenizer, max_len=max_len)
@@ -35,12 +42,15 @@ def _add_texts_to_faiss_index(faiss_idx, idx2text, text_enc, tokenizer, max_len)
     xb = np.concatenate(text_embeds)
     faiss.normalize_L2(xb)
 
-    faiss_idx.add_with_ids(xb, np.array(list(idx2text.keys())))
+    indices = np.array(list(idx2text.keys()))
+    faiss_idx.add_with_ids(xb, indices)
+
     print(f"There are {faiss_idx.ntotal:,} vectors in total in the DB.")
 
 
 def _add_images_to_faiss_index(faiss_idx, dl, img_enc):
     print(f"There are {faiss_idx.ntotal:,} vectors in total in the DB.")
+
     img_embeds = list()
     indices = list()
     for idx, image in enumerate(tqdm(dl)):
@@ -49,7 +59,9 @@ def _add_images_to_faiss_index(faiss_idx, dl, img_enc):
         indices.append(idx)
     xb = np.concatenate(img_embeds)
     faiss.normalize_L2(xb)
-    faiss_idx.add_with_ids(xb, np.arange(xb.shape[0]))
+    indices = np.arange(xb.shape[0])
+    faiss_idx.add_with_ids(xb, indices)
+
     print(f"There are {faiss_idx.ntotal:,} vectors in total in the DB.")
 
 
@@ -85,18 +97,25 @@ def _image_to_embedding(img_path, img_enc, img_size):
     return img_embed
 
 
-def perform_semantic_search(query, faiss_idx):
-    if Path(query).exists():
-        query_embed = _image_to_embedding(
-            img_path=img_path, img_enc=img_enc, img_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
-        )
-    else:
-        query_embed = _text_to_embedding(query, text_enc=text_enc)
+# def perform_semantic_search(query, faiss_idx, k):
+#     if Path(query).exists():
+#         query_embed = _image_to_embedding(
+#             img_path=img_path, img_enc=img_enc, img_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
+#         )
+#     else:
+#         query_embed = _text_to_embedding(query, text_enc=text_enc)
 
+#     xq = query_embed.detach().cpu().numpy()
+#     faiss.normalize_L2(xq)
+#     dists, nns = faiss_idx.search(xq, k)
+#     return dists, nns
+
+
+def perform_semantic_search(query_embed, faiss_idx, k):
     xq = query_embed.detach().cpu().numpy()
     faiss.normalize_L2(xq)
-    distances, indices = faiss_idx.search(xq, 1)
-    return distances, indices
+    dists, nns = faiss_idx.search(xq, k)
+    return dists, nns
 
 
 def index_to_image(idx, ds):
@@ -108,16 +127,18 @@ def index_to_image(idx, ds):
 
 
 if __name__ == "__main__":
-    max_len = 128
-    clip = get_clip(config=CONFIG, max_len=max_len, device=DEVICE)
-    clip.eval()
-    img_enc = clip.img_enc
-    text_enc = clip.text_enc
+    # CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/CONFIG.yaml")
+    CONFIG = load_config(Path(__file__).parent/"config.yaml")
 
+    DEVICE = get_device()
+
+    max_len = 128
     ckpt_path = "/Users/jongbeomkim/Documents/clip/checkpoints/clip_flickr_200.pth"
-    state_dict = torch.load(ckpt_path, map_location=DEVICE)
-    img_enc.load_state_dict(state_dict["image_encoder"])
-    text_enc.load_state_dict(state_dict["text_encoder"])
+    img_enc, text_enc = get_encoders_from_checkpoint(
+        ckpt_path, config=CONFIG, max_len=max_len, device=DEVICE,
+    )
+    img_enc.eval()
+    text_enc.eval()
 
     tokenizer = get_tokenizer()
     ds = ImageDataset(
@@ -150,8 +171,8 @@ if __name__ == "__main__":
         img_path=img_path, img_enc=img_enc, img_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
     )
 
-    distances, indices = perform_semantic_search(query=img_path, faiss_idx=faiss_idx)
-    print(f"Cosine similarity: {distances[0][0]:.3f}")
+    dists, nns = perform_semantic_search(query=img_path, faiss_idx=faiss_idx)
+    print(f"Cosine similarity: {dists[0][0]:.3f}")
 
-    out_image = index_to_image(idx=indices, ds=ds)
+    out_image = index_to_image(idx=nns, ds=ds)
     out_image.show()

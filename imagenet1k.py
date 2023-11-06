@@ -1,59 +1,50 @@
 # Source: https://www.kaggle.com/datasets/ifigotin/imagenetmini-1000/
 
 from torch.utils.data import Dataset
-from torchvision.datasets import ImageFolder
 from pathlib import Path
 import os
 from PIL import Image
+import json
 
-from utils import get_imagenet1k_classes
-from flickr import encode
-from data_augmentation import get_train_transformer, get_val_transformer
+from data_augmentation import get_val_transformer
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
-CLASSES = get_imagenet1k_classes("/Users/jongbeomkim/Desktop/workspace/CLIP/imagenet1k_classes.json")
-CLASSES
 
-
-def _class_name_to_prompt(class_name):
-    return f"""A photo a {class_name.replace("_", " ")}"""
-
-
-def _img_path_to_prompt(img_path):
-    dir_name = CLASSES[Path(img_path).parent.name]
-    return _class_name_to_prompt(dir_name)
+def get_imagenet1k_classes(json_path):
+    with open(json_path, mode="r") as f:
+        classes = json.load(f)
+    classes = {v[0]: (int(k), v[1]) for k, v in classes.items()}
+    return classes
 
 
 class ImageNet1kDataset(Dataset):
-    def __init__(self, data_dir, tokenizer, img_size, split=None):
+    def __init__(self, data_dir, img_size, classes, split=None):
         super().__init__()
+
+        self.classes = classes
 
         self.data_dir = Path(data_dir)
         if split is not None:
             self.data_dir /= split
-        self.tokenizer = tokenizer
 
         self.img_paths = sorted(list(map(str, self.data_dir.glob("**/*.JPEG"))))
-
         self.transformer = get_val_transformer(img_size=img_size)
+
+    def _img_path_to_gt(self, img_path, classes):
+        gt = classes[Path(img_path).parent.name][0]
+        return gt
 
     def __len__(self):
         return len(self.img_paths)
 
     def __getitem__(self, idx):
         img_path = self.img_paths[idx]
-        image = Image.open(img_path)
+        image = Image.open(img_path).convert("RGB")
         image = self.transformer(image)
 
-        prompt =_img_path_to_prompt(img_path)
-        token_ids = encode(prompt, tokenizer=self.tokenizer, max_len=self.max_len)
-        return image, token_ids
-
-
-# def get_imagenet1k_dataset(data_dir, img_size):
-#     ds = ImageFolder(root=data_dir, transform=get_val_transformer(img_size))
-#     return ds
+        gt = self._img_path_to_gt(img_path, classes=self.classes)
+        return image, gt
 
 
 if __name__ == "__main__":

@@ -7,6 +7,9 @@ class ImageEncoder(nn.Module):
     def __init__(self, img_size, patch_size, n_layers, n_heads, hidden_dim, mlp_dim, embed_dim):
         super().__init__()
 
+        self.img_size = img_size
+        self.embed_dim = embed_dim
+
         self.model = VisionTransformer(
             image_size=img_size,
             patch_size=patch_size,
@@ -29,6 +32,8 @@ class ImageEncoder(nn.Module):
 class TextEncoder(nn.Module):
     def __init__(self, vocab_size, max_len, n_layers, n_heads, hidden_dim, mlp_dim, embed_dim):
         super().__init__()
+
+        self.max_len = max_len
 
         self.model = DistilBertModel(
             DistilBertConfig(
@@ -65,7 +70,7 @@ class ClassificationHead(nn.Module):
         return x
 
 
-class ZeroShotClassifier(nn.Module):
+class LinearClassifier(nn.Module):
     def __init__(self, img_size, patch_size, n_layers, n_heads, hidden_dim, mlp_dim, embed_dim, n_classes):
         super().__init__()
 
