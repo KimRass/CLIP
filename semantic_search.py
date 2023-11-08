@@ -73,9 +73,14 @@ def load_faiss_index(index_path):
         print(f"No file; '{index_path}'!")
 
 
-def save_faiss_index(dim, dl, img_enc, save_path):
-    faiss_idx = faiss.IndexFlatIP(dim) # Inner product
+def init_faiss_index(dim):
+    faiss_idx = faiss.IndexFlatIP(dim) # `IP`: Inner Product
     faiss_idx = faiss.IndexIDMap2(faiss_idx)
+    return faiss_idx
+
+
+def save_faiss_index(dim, dl, img_enc, save_path):
+    faiss_idx = init_faiss_index(dim)
     _add_images_to_faiss_index(faiss_idx=faiss_idx, dl=dl, img_enc=img_enc)
     faiss.write_index(faiss_idx, save_path)
 
