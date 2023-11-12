@@ -147,7 +147,6 @@ def get_dls(flickr8k_dir, flickr30k_dir, tokenizer, max_len, img_size, batch_siz
     train_size = round(len(ds) * 0.9)
     val_size = len(ds) - train_size
     train_ds, val_ds = random_split(ds, [train_size, val_size])
-    # train_ds.transformer = get_val_transformer
     val_ds.transformer = get_val_transformer
 
     collator = DataCollatorForDynamicPadding(tokenizer=tokenizer)
