@@ -120,7 +120,7 @@ class ImageDataset(Dataset):
         img_path = self.img_paths[idx]
         image = Image.open(img_path)
         image = self.transformer(image)
-        return image
+        return img_path, image
 
 
 if __name__ == "__main__":

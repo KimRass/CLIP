@@ -52,11 +52,11 @@ def _add_images_to_faiss_index(faiss_idx, dl, img_enc):
     print(f"There are {faiss_idx.ntotal:,} vectors in total in the DB.")
 
     img_embeds = list()
-    indices = list()
+    # indices = list()
     for idx, image in enumerate(tqdm(dl)):
         img_embed = img_enc(image)
         img_embeds.append(img_embed.detach().cpu().numpy())
-        indices.append(idx)
+        # indices.append(idx)
     xb = np.concatenate(img_embeds)
     faiss.normalize_L2(xb)
     indices = np.arange(xb.shape[0])
@@ -132,7 +132,6 @@ def index_to_image(idx, ds):
 
 
 if __name__ == "__main__":
-    # CONFIG = load_config("/Users/jongbeomkim/Desktop/workspace/CLIP/CONFIG.yaml")
     CONFIG = load_config(Path(__file__).parent/"config.yaml")
 
     DEVICE = get_device()
