@@ -55,13 +55,13 @@ def train_single_step(model, image, gt, optim, scaler, device):
     image = image.to(device)
     gt = gt.to(device)
 
-    with torch.autocast(
-        device_type=device.type,
-        dtype=torch.float16 if device.type == "cuda" else torch.bfloat16,
-        enabled=True if device.type == "cuda" else False,
-    ):
-        pred = model(image)
-        loss = crit(pred, gt)
+    # with torch.autocast(
+    #     device_type=device.type,
+    #     dtype=torch.float16 if device.type == "cuda" else torch.bfloat16,
+    #     enabled=True if device.type == "cuda" else False,
+    # ):
+    pred = model(image)
+    loss = crit(pred, gt)
 
     optim.zero_grad()
     if CONFIG["DEVICE"].type == "cuda" and scaler is not None:
