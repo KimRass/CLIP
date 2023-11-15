@@ -1,5 +1,4 @@
-# References:
-    # https://github.com/omihub777/ViT-CIFAR/blob/main/criterions.py
+# Source: https://github.com/omihub777/ViT-CIFAR/blob/main/criterions.py
 
 import torch
 import torch.nn as nn
