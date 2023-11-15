@@ -18,7 +18,7 @@ from utils import (
 from flickr import FlickrDataset, DataCollatorForDynamicPadding
 from data_augmentation import get_val_transformer
 from clip import CLIP
-from evaluate import TopKAccuracy
+from evaluate import CLIPTopKAccuracy
 
 CONFIG = load_config(Path(__file__).parent/"configs/flickr.yaml")
 
@@ -210,7 +210,7 @@ if __name__ == "__main__":
         device=DEVICE,
         torch_compile=args.torch_compile,
     )
-    metric = TopKAccuracy(k=1, batch_size=args.batch_size)
+    metric = CLIPTopKAccuracy(k=1, batch_size=args.batch_size)
 
     # "We use the Adam optimizer with decoupled weight decay regularization (Loshchilov & Hutter, 2017) applied to all
     # weights that are not gains or biases, and decay the learning rate using a cosine schedule."

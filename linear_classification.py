@@ -12,7 +12,7 @@ from utils import get_config, get_elapsed_time, apply_seed
 from model import LinearClassifier
 from data_augmentation import get_train_transformer
 from loss import ClassificationLoss
-from evaluate import TopKAccuracy
+from evaluate import CLIPTopKAccuracy, ClsTopKAccuracy
 
 
 def get_args():
@@ -122,7 +122,7 @@ if __name__ == "__main__":
     scaler = GradScaler(enabled=True if CONFIG["DEVICE"].type == "cuda" else False)
 
     crit = ClassificationLoss(n_classes=CONFIG["IMAGENET1K"]["N_CLASSES"])
-    metric = TopKAccuracy(k=5, batch_size=CONFIG["BATCH_SIZE"])
+    metric = ClsTopKAccuracy(k=5)
 
     train_dl, val_dl = get_dls(
         data_dir=CONFIG["DATA_DIR"],
