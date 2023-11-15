@@ -7,11 +7,12 @@ from time import time
 from PIL import Image
 from pathlib import Path
 from collections import OrderedDict
-import warnings
 import random
 import numpy as np
 import os
 import json
+from transformers import DistilBertTokenizerFast
+from copy import deepcopy
 
 
 def apply_seed(seed):
@@ -40,8 +41,29 @@ def get_device():
     return device
 
 
+def _args_to_config(args, config):
+    copied = deepcopy(config)
+    for k, v in vars(args).items():
+        copied[k.upper()] = v
+    return copied
+
+
+def get_config(config_path, args=None):
+    config = load_config(config_path)
+    if args is not None:
+        config = _args_to_config(args=args, config=config)
+
+    config["DEVICE"] = get_device()
+    return config
+
+
 def get_elapsed_time(start_time):
     return timedelta(seconds=round(time() - start_time))
+
+
+def get_tokenizer():
+    tokenizer = DistilBertTokenizerFast.from_pretrained("distilbert-base-uncased")
+    return tokenizer
 
 
 def _to_pil(img):
@@ -75,7 +97,7 @@ def l2_norm(x):
     return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
 
 
-def _modify_state_dict(state_dict, keyword="_orig_mod."):
+def modify_state_dict(state_dict, keyword="_orig_mod."):
     new_state_dict = OrderedDict()
     for old_key in list(state_dict.keys()):
         if old_key and old_key.startswith(keyword):
@@ -86,25 +108,15 @@ def _modify_state_dict(state_dict, keyword="_orig_mod."):
     return new_state_dict
 
 
-def get_gpu_ok():
-    # https://tutorials.pytorch.kr/intermediate/torch_compile_tutorial.html
-    gpu_ok = False
-    if torch.cuda.is_available():
-        device_cap = torch.cuda.get_device_capability()
-        if device_cap in ((7, 0), (8, 0), (9, 0)):
-            gpu_ok = True
-
-    if not gpu_ok:
-        warnings.warn(
-            "GPU is not NVIDIA V100, A100, or H100. Speedup numbers may be lower than expected."
-        )
-    return gpu_ok
-
-
 def get_imagenet1k_classes(json_path):
     json_path = "/Users/jongbeomkim/Desktop/workspace/CLIP/imagenet1k_classes.json"
     with open(json_path, mode="r") as f:
         classes = json.load(f)
     classes = {k[0]: class_name for dir_name, class_name in classes.items()}
-    # classes = {dir_name: class_name for dir_name, class_name in classes.values()}
     return classes
+
+
+def set_requires_grad(models, requires_grad):
+    for model in models:
+        for p in model.parameters():
+            p.requires_grad = requires_grad

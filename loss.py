@@ -1,4 +1,5 @@
-# Source: https://github.com/omihub777/ViT-CIFAR/blob/main/criterions.py
+# References:
+    # https://github.com/KimRass/ViT/blob/main/loss.py
 
 import torch
 import torch.nn as nn
@@ -13,7 +14,7 @@ class ClassificationLoss(nn.Module):
         self.n_classes = n_classes
         self.smoothing = smoothing
 
-        self.ce = nn.CrossEntropyLoss(reduction="sum")
+        self.ce = nn.CrossEntropyLoss(reduction="mean")
 
     def forward(self, pred, gt):
         if gt.ndim == 1:

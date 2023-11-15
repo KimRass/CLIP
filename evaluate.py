@@ -1,3 +1,6 @@
+# References:
+    # https://github.com/KimRass/ViT/blob/main/evaluate.py
+
 import torch
 import torch.nn as nn
 

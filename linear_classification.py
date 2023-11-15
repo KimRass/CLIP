@@ -6,11 +6,13 @@ import argparse
 from tqdm import tqdm
 from torch.optim import Adam
 from torch.cuda.amp import GradScaler
+import time
 
-from utils import load_config, get_device
+from utils import get_config, get_elapsed_time, apply_seed
 from model import LinearClassifier
 from data_augmentation import get_train_transformer
 from loss import ClassificationLoss
+from evaluate import TopKAccuracy
 
 
 def get_args():
@@ -18,6 +20,7 @@ def get_args():
 
     parser.add_argument("--ckpt_path", type=str, required=True)
     parser.add_argument("--data_dir", type=str, required=True)
+    parser.add_argument("--n_epochs", type=int, required=True)
     parser.add_argument("--batch_size", type=int, required=True)
     parser.add_argument("--n_cpus", type=int, required=False, default=0)
 
@@ -25,12 +28,77 @@ def get_args():
     return args
 
 
+def get_dls(data_dir, img_size, batch_size, n_cpus):
+    transformer = get_train_transformer(img_size=img_size)
+    train_ds = ImageFolder(Path(data_dir)/"train", transform=transformer)
+    train_dl = DataLoader(
+        train_ds,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=n_cpus,
+        pin_memory=True,
+        drop_last=True,
+    )
+    val_ds = ImageFolder(Path(data_dir)/"val", transform=transformer)
+    val_dl = DataLoader(
+        val_ds,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=n_cpus,
+        pin_memory=True,
+        drop_last=True,
+    )
+    return train_dl, val_dl
+
+
+def train_single_step(model, image, gt, optim, scaler, device):
+    image = image.to(device)
+    gt = gt.to(device)
+
+    with torch.autocast(
+        device_type=device.type,
+        dtype=torch.float16 if device.type == "cuda" else torch.bfloat16,
+        enabled=True if device.type == "cuda" else False,
+    ):
+        pred = model(image)
+        loss = crit(pred, gt)
+
+    optim.zero_grad()
+    if CONFIG["DEVICE"].type == "cuda" and scaler is not None:
+        scaler.scale(loss).backward()
+        scaler.step(optim)
+        scaler.update()
+    else:
+        loss.backward()
+        optim.step()
+    return loss.item()
+
+
+@torch.no_grad()
+def validate(val_dl, model, metric, device):
+    print(f"""Validating...""")
+    model.eval()
+    batch_size = val_dl.batch_size
+    sum_corr = 0
+    for image, gt in val_dl:
+        image = image.to(device)
+        gt = gt.to(device)
+
+        pred = model(image)
+        acc = metric(pred=pred, gt=gt)
+        sum_corr += acc * batch_size
+    avg_acc = sum_corr / (batch_size * len(val_dl))
+    print(f"""Average accuracy: {avg_acc:.3f}""")
+
+    model.train()
+    return avg_acc
+
+
 if __name__ == "__main__":
-    CONFIG = load_config(Path(__file__).parent/"CONFIG.yaml")
-
     args = get_args()
+    CONFIG = get_config(config_path=Path(__file__).parent/"configs/imagenet1k.yaml", args=args)
 
-    DEVICE = get_device()
+    apply_seed(CONFIG["SEED"])
 
     model = LinearClassifier(
         img_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
@@ -40,51 +108,52 @@ if __name__ == "__main__":
         hidden_dim=CONFIG["ARCHITECTURE"]["IMG_ENC"]["HIDDEN_DIM"],
         mlp_dim=CONFIG["ARCHITECTURE"]["IMG_ENC"]["MLP_DIM"],
         embed_dim=CONFIG["ARCHITECTURE"]["EMBED_DIM"],
-        n_classes=1000,
+        n_classes=CONFIG["IMAGENET1K"]["N_CLASSES"],
     )
-    state_dict = torch.load(args.ckpt_path, map_location=DEVICE)
+    state_dict = torch.load(CONFIG["CKPT_PATH"], map_location=CONFIG["DEVICE"])
     model.img_enc.load_state_dict(state_dict["image_encoder"])
-    model.img_enc.eval()
 
     optim = Adam(
         model.parameters(),
-        # lr=CONFIG.BASE_LR,
-        lr=0.0001
-        # betas=(CONFIG.BETA1, CONFIG.BETA2),
-        # weight_decay=CONFIG.WEIGHT_DECAY,
+        lr=CONFIG["TRAINING"]["LR"],
+        betas=(CONFIG["OPTIMIZER"]["BETA1"], CONFIG["OPTIMIZER"]["BETA2"]),
+        weight_decay=CONFIG["OPTIMIZER"]["WEIGHT_DECAY"],
     )
-    scaler = GradScaler(enabled=True if DEVICE.type == "cuda" else False)
+    scaler = GradScaler(enabled=True if CONFIG["DEVICE"].type == "cuda" else False)
 
-    crit = ClassificationLoss(n_classes=1000)
+    crit = ClassificationLoss(n_classes=CONFIG["IMAGENET1K"]["N_CLASSES"])
+    metric = TopKAccuracy(k=5, batch_size=CONFIG["BATCH_SIZE"])
 
-    transformer = get_train_transformer(img_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"])
-    train_ds = ImageFolder(args.data_dir, transform=transformer)
-    train_dl = DataLoader(
-        train_ds,
-        batch_size=args.batch_size,
-        shuffle=False,
-        num_workers=args.n_cpus,
-        pin_memory=False,
-        drop_last=False,
+    train_dl, val_dl = get_dls(
+        data_dir=CONFIG["DATA_DIR"],
+        img_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
+        batch_size=CONFIG["BATCH_SIZE"],
+        n_cpus=CONFIG["N_CPUS"],
     )
-    init_epoch = 0
-    for epoch in range(init_epoch + 1, 32 + 1):
-        for step, (image, gt) in tqdm(enumerate(train_dl, start=1)):
-            image = image.to(DEVICE)
-            gt = gt.to(DEVICE)
 
-            with torch.autocast(
-                device_type=DEVICE.type,
-                dtype=torch.float16 if DEVICE.type == "cuda" else torch.bfloat16,
-            ):
-                pred = model(image)
-                loss = crit(pred, gt)
+    best_avg_acc = 0
+    for epoch in range(1, CONFIG["N_EPOCHS"] + 1):
+        start_time = time.time()
+        cum_loss = 0
+        for step, (image, gt) in enumerate(train_dl, start=1):
+            loss = train_single_step(
+                model=model,
+                image=image,
+                gt=gt,
+                optim=optim,
+                scaler=scaler,
+                device=CONFIG["DEVICE"],
+            )
+            cum_loss += loss
+        avg_loss = cum_loss / len(train_dl)
 
-            optim.zero_grad()
-            if DEVICE.type == "cuda" and scaler is not None:
-                scaler.scale(loss).backward()
-                scaler.step(optim)
-                scaler.update()
-            else:
-                loss.backward()
-                optim.step()
+        avg_acc = validate(val_dl=val_dl, model=model, metric=metric, device=CONFIG["DEVICE"])
+        if avg_acc > best_avg_acc:
+            best_avg_acc = avg_acc
+
+        msg = f"[ {get_elapsed_time(start_time)} ]"
+        msg += f"""[ {epoch}/{CONFIG["N_EPOCHS"]} ]"""
+        msg += f"""[ Loss: {avg_loss:.4f} ]"""
+        msg += f"""[ Accuracy: {avg_acc:.4f} ]"""
+        msg += f"""[ Best accuracy: {best_avg_acc:.4f} ]"""
+        print(msg)

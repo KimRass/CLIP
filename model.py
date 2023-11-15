@@ -2,6 +2,8 @@ import torch.nn as nn
 from torchvision.models import VisionTransformer
 from transformers import DistilBertConfig, DistilBertModel
 
+from utils import set_requires_grad
+
 
 class ImageEncoder(nn.Module):
     def __init__(self, img_size, patch_size, n_layers, n_heads, hidden_dim, mlp_dim, embed_dim):
@@ -83,11 +85,13 @@ class LinearClassifier(nn.Module):
             mlp_dim=mlp_dim,
             embed_dim=embed_dim,
         )
-        # Freeze parameters.
-        # self.img_enc.img_proj = ClsHead(hidden_dim=hidden_dim, n_classes=n_classes)
         self.cls_head = ClsHead(hidden_dim=embed_dim, n_classes=n_classes)
+
+        # Freeze parameters.
+        set_requires_grad(models=[self.img_enc], requires_grad=False)
+        self.img_enc.eval()
 
     def forward(self, x):
         x = self.img_enc(x)
-        x = self.cls_head(x)
+        x = self.cls_head(x.detach())
         return x

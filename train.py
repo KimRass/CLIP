@@ -7,14 +7,20 @@ from time import time
 from pathlib import Path
 import wandb
 
-from utils import apply_seed, load_config, get_device, get_elapsed_time, _modify_state_dict
-from tokenizer import get_tokenizer
+from utils import (
+    apply_seed,
+    load_config,
+    get_device,
+    get_elapsed_time,
+    modify_state_dict,
+    get_tokenizer,
+)
 from flickr import FlickrDataset, DataCollatorForDynamicPadding
 from data_augmentation import get_val_transformer
 from clip import CLIP
 from evaluate import TopKAccuracy
 
-CONFIG = load_config(Path(__file__).parent/"config.yaml")
+CONFIG = load_config(Path(__file__).parent/"configs/flickr.yaml")
 
 DEVICE = get_device()
 
@@ -32,6 +38,7 @@ def get_args():
     parser.add_argument("--n_cpus", type=int, required=True)
     # "We use a very large minibatch size of 32,768."
     parser.add_argument("--batch_size", type=int, required=False, default=32_768)
+    # "For computational efficiency, the max sequence length was capped at 76."
     parser.add_argument("--max_len", type=int, required=True)
     parser.add_argument("--torch_compile", action="store_true", required=False)
     parser.add_argument("--run_id", type=str, required=False)
@@ -116,8 +123,8 @@ def validate(val_dl, clip, metric):
 def save_checkpoint(clip, save_path):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     state_dict = {
-        "image_encoder": _modify_state_dict(clip.img_enc.state_dict()),
-        "text_encoder": _modify_state_dict(clip.text_enc.state_dict()),
+        "image_encoder": modify_state_dict(clip.img_enc.state_dict()),
+        "text_encoder": modify_state_dict(clip.text_enc.state_dict()),
     }
     torch.save(state_dict, str(save_path))
     print("Saved the checkpoint.")
@@ -127,8 +134,8 @@ def save_wandb_checkpoint(epoch, clip, optim, scaler, max_avg_acc, save_path):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     state_dict = {
         "epoch": epoch,
-        "image_encoder": _modify_state_dict(clip.img_enc.state_dict()),
-        "text_encoder": _modify_state_dict(clip.text_enc.state_dict()),
+        "image_encoder": modify_state_dict(clip.img_enc.state_dict()),
+        "text_encoder": modify_state_dict(clip.text_enc.state_dict()),
         "temperature": clip.temp.item(),
         "optimizer": optim.state_dict(),
         "max_average_accuracy": max_avg_acc,
@@ -214,7 +221,7 @@ if __name__ == "__main__":
         weight_decay=CONFIG["OPTIMIZER"]["WEIGHT_DECAY"],
     )
 
-    scaler = GradScaler() if DEVICE.type == "cuda" else None
+    scaler = GradScaler(enabled=True if DEVICE.type == "cuda" else False)
 
     ### Resume
     if wandb.run.resumed:

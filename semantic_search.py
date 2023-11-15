@@ -9,9 +9,8 @@ import faiss
 from tqdm import tqdm
 from PIL import Image
 
-from utils import load_config, get_device, image_to_grid
+from utils import load_config, get_device, image_to_grid, get_tokenizer
 from data_augmentation import get_val_transformer
-from tokenizer import get_tokenizer
 from flickr import ImageDataset, encode, pad, get_attention_mask
 from train import get_clip
 
@@ -132,7 +131,7 @@ def index_to_image(idx, ds):
 
 
 if __name__ == "__main__":
-    CONFIG = load_config(Path(__file__).parent/"config.yaml")
+    CONFIG = load_config(Path(__file__).parent/"configs/flickr.yaml")
 
     DEVICE = get_device()
 
