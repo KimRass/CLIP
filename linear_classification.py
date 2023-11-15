@@ -55,13 +55,13 @@ def train_single_step(model, image, gt, optim, scaler, device):
     image = image.to(device)
     gt = gt.to(device)
 
-    # with torch.autocast(
-    #     device_type=device.type,
-    #     dtype=torch.float16 if device.type == "cuda" else torch.bfloat16,
-    #     enabled=True if device.type == "cuda" else False,
-    # ):
-    pred = model(image)
-    loss = crit(pred, gt)
+    with torch.autocast(
+        device_type=device.type,
+        dtype=torch.float16 if device.type == "cuda" else torch.bfloat16,
+        enabled=True if device.type == "cuda" else False,
+    ):
+        pred = model(image)
+        loss = crit(pred, gt)
 
     optim.zero_grad()
     if CONFIG["DEVICE"].type == "cuda" and scaler is not None:
@@ -109,7 +109,7 @@ if __name__ == "__main__":
         mlp_dim=CONFIG["ARCHITECTURE"]["IMG_ENC"]["MLP_DIM"],
         embed_dim=CONFIG["ARCHITECTURE"]["EMBED_DIM"],
         n_classes=CONFIG["IMAGENET1K"]["N_CLASSES"],
-    )
+    ).to(CONFIG["DEVICE"])
     state_dict = torch.load(CONFIG["CKPT_PATH"], map_location=CONFIG["DEVICE"])
     model.img_enc.load_state_dict(state_dict["image_encoder"])
 
