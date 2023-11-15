@@ -76,7 +76,6 @@ def train_single_step(model, image, gt, optim, scaler, device):
 
 @torch.no_grad()
 def validate(val_dl, model, metric, device):
-    print(f"""Validating...""")
     model.eval()
     batch_size = val_dl.batch_size
     sum_corr = 0
@@ -88,8 +87,6 @@ def validate(val_dl, model, metric, device):
         acc = metric(pred=pred, gt=gt)
         sum_corr += acc * batch_size
     avg_acc = sum_corr / (batch_size * len(val_dl))
-    print(f"""Average accuracy: {avg_acc:.3f}""")
-
     model.train()
     return avg_acc
 
