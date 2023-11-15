@@ -12,7 +12,6 @@ from tokenizer import get_tokenizer
 from flickr import FlickrDataset, DataCollatorForDynamicPadding
 from data_augmentation import get_val_transformer
 from clip import CLIP
-from loss import CLIPLoss
 from evaluate import TopKAccuracy
 
 CONFIG = load_config(Path(__file__).parent/"config.yaml")
@@ -41,7 +40,7 @@ def get_args():
     return args
 
 
-def get_clip(config, max_len, device, torch_compile=False):
+def get_clip(config, batch_size, max_len, device, torch_compile=False):
     clip = CLIP(
         img_size=config["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
         patch_size=config["ARCHITECTURE"]["IMG_ENC"]["PATCH_SIZE"],
@@ -56,6 +55,7 @@ def get_clip(config, max_len, device, torch_compile=False):
         text_hidden_dim=config["ARCHITECTURE"]["TEXT_ENC"]["HIDDEN_DIM"],
         text_mlp_dim=config["ARCHITECTURE"]["TEXT_ENC"]["MLP_DIM"],
         embed_dim=config["ARCHITECTURE"]["EMBED_DIM"],
+        batch_size=batch_size,
     ).to(device)
     if torch_compile:
         clip = torch.compile(clip)
@@ -63,7 +63,7 @@ def get_clip(config, max_len, device, torch_compile=False):
     return clip
 
 
-def train_single_step(image, token_ids, attn_mask, clip, crit, optim, scaler):
+def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
     image = image.to(DEVICE)
     token_ids = token_ids.to(DEVICE)
     attn_mask = attn_mask.to(DEVICE)
@@ -75,7 +75,7 @@ def train_single_step(image, token_ids, attn_mask, clip, crit, optim, scaler):
         enabled=True,
     ):
         img_embed, text_embed = clip(image=image, token_ids=token_ids, attn_mask=attn_mask)
-        loss = crit(img_embed=img_embed, text_embed=text_embed)
+        loss = clip.get_loss(img_embed=img_embed, text_embed=text_embed)
 
     optim.zero_grad()
     if DEVICE.type == "cuda" and scaler is not None:
@@ -196,8 +196,13 @@ if __name__ == "__main__":
         n_cpus=args.n_cpus,
     )
 
-    clip = get_clip(config=CONFIG, max_len=args.max_len, device=DEVICE, torch_compile=args.torch_compile)
-    crit = CLIPLoss(batch_size=args.batch_size, temp=clip.temp)
+    clip = get_clip(
+        config=CONFIG,
+        batch_size=args.batch_size,
+        max_len=args.max_len,
+        device=DEVICE,
+        torch_compile=args.torch_compile,
+    )
     metric = TopKAccuracy(k=1, batch_size=args.batch_size)
 
     # "We use the Adam optimizer with decoupled weight decay regularization (Loshchilov & Hutter, 2017) applied to all
@@ -238,7 +243,6 @@ if __name__ == "__main__":
                 token_ids=token_ids,
                 attn_mask=attn_mask,
                 clip=clip,
-                crit=crit,
                 optim=optim,
                 scaler=scaler,
             )

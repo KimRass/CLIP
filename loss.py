@@ -1,35 +1,31 @@
+# References:
+    # https://github.com/omihub777/ViT-CIFAR/blob/main/criterions.py
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-
-from utils import l2_norm
 
 
-class CLIPLoss(nn.Module):
-    def __init__(self, batch_size, temp):
+class ClassificationLoss(nn.Module):
+    def __init__(self, n_classes, smoothing=0):
         super().__init__()
 
-        self.temp = temp
+        assert 0 <= smoothing <= 1, "The argument `smoothing` must be between 0 and 1!"
 
-        self.gt = torch.arange(batch_size)
+        self.n_classes = n_classes
+        self.smoothing = smoothing
 
-    def forward(self, img_embed, text_embed):
-        img_embed = l2_norm(img_embed)
-        text_embed = l2_norm(text_embed)
+        self.ce = nn.CrossEntropyLoss(reduction="sum")
 
-        sim_mat = torch.matmul(img_embed, text_embed.T) * torch.exp(self.temp)
-
-        self.gt = self.gt.to(img_embed.device)
-        img_loss = F.cross_entropy(sim_mat, self.gt, reduction="mean")
-        text_loss = F.cross_entropy(sim_mat.T, self.gt, reduction="mean")
-        tot_loss = (img_loss + text_loss) / 2
-        return tot_loss
-
-
-if __name__ == "__main__":
-    a = torch.randn(4, 4)
-    b = torch.randn(4, 4)
-    a = l2_norm(a)
-    b = l2_norm(b)
-    torch.matmul(a, b.T)
-    F.cosine_similarity(a, b)
+    def forward(self, pred, gt):
+        if gt.ndim == 1:
+            new_gt = torch.full_like(pred, fill_value=self.smoothing / (self.n_classes - 1))
+            new_gt.scatter_(1, gt.unsqueeze(1), 1 - self.smoothing)
+        elif gt.ndim == 2:
+            new_gt = gt.clone()
+            new_gt.sum(dim=1)
+            new_gt *= (1 - self.smoothing)
+            is_zero = (gt == 0)
+            likelihood = self.smoothing / (gt.shape[1] - (~is_zero).sum(dim=1))
+            new_gt += is_zero * likelihood.unsqueeze(1).repeat(1, self.n_classes)
+        loss = self.ce(pred, new_gt)
+        return loss

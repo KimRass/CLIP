@@ -55,7 +55,7 @@ class TextEncoder(nn.Module):
         return x
 
 
-class ClassificationHead(nn.Module):
+class ClsHead(nn.Module):
     def __init__(self, hidden_dim, n_classes):
         super().__init__()
 
@@ -64,7 +64,7 @@ class ClassificationHead(nn.Module):
         self.head_proj = nn.Linear(hidden_dim, n_classes)
 
     def forward(self, x):
-        x = x[:, 0, :]
+        # x = x[:, 0, :]
         x = self.head_proj(x)
         x = x.view(-1, self.n_classes)
         return x
@@ -84,8 +84,10 @@ class LinearClassifier(nn.Module):
             embed_dim=embed_dim,
         )
         # Freeze parameters.
-        self.img_enc.img_proj = ClassificationHead(hidden_dim=hidden_dim, n_classes=n_classes)
+        # self.img_enc.img_proj = ClsHead(hidden_dim=hidden_dim, n_classes=n_classes)
+        self.cls_head = ClsHead(hidden_dim=embed_dim, n_classes=n_classes)
 
     def forward(self, x):
         x = self.img_enc(x)
+        x = self.cls_head(x)
         return x
