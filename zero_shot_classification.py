@@ -4,8 +4,7 @@ from pathlib import Path
 import argparse
 from tqdm import tqdm
 
-from utils import load_config, get_device
-from tokenizer import get_tokenizer
+from utils import load_config, get_device, get_tokenizer
 from imagenet1k import get_imagenet1k_classes, ImageNet1kDataset
 from semantic_search import (
     init_faiss_index,
@@ -18,8 +17,8 @@ from semantic_search import (
 def get_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--ckpt_path", type=str, required=True)
+    parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--batch_size", type=int, required=True)
     parser.add_argument("--n_cpus", type=int, required=False, default=0)
     parser.add_argument("--max_len", type=int, required=False, default=128)
