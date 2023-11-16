@@ -32,6 +32,10 @@ def load_config(yaml_path):
     return config
 
 
+def get_parent_dir():
+    return Path(__file__).resolve().parent
+
+
 def get_device():
     if torch.cuda.is_available():
         device = torch.device("cuda")

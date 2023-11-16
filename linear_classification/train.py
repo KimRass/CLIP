@@ -3,16 +3,15 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import ImageFolder
 from pathlib import Path
 import argparse
-from tqdm import tqdm
 from torch.optim import Adam
 from torch.cuda.amp import GradScaler
 import time
 
-from utils import get_config, get_elapsed_time, apply_seed
+from utils import get_parent_dir, get_config, get_elapsed_time, apply_seed
 from model import LinearClassifier
 from data_augmentation import get_train_transformer
 from loss import ClassificationLoss
-from evaluate import CLIPTopKAccuracy, ClsTopKAccuracy
+from evaluate import ClsTopKAccuracy
 
 
 def get_args():
@@ -92,8 +91,9 @@ def validate(val_dl, model, metric, device):
 
 
 if __name__ == "__main__":
+    PARENT_DIR = get_parent_dir()
     args = get_args()
-    CONFIG = get_config(config_path=Path(__file__).parent/"configs/imagenet1k.yaml", args=args)
+    CONFIG = get_config(config_path=PARENT_DIR/"configs/cifar100.yaml", args=args)
 
     apply_seed(CONFIG["SEED"])
 

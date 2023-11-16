@@ -1,10 +1,9 @@
 from torch.utils.data import DataLoader
 import numpy as np
-from pathlib import Path
 import argparse
 from tqdm import tqdm
 
-from utils import load_config, get_device, get_tokenizer
+from utils import get_parent_dir, get_config, get_tokenizer
 from imagenet1k import get_imagenet1k_classes, ImageNet1kDataset
 from semantic_search import (
     init_faiss_index,
@@ -35,19 +34,20 @@ def get_number_of_correct_preds(gt, nns, k):
 
 
 if __name__ == "__main__":
-    CONFIG = load_config(Path(__file__).parent/"config.yaml")
-
+    PARENT_DIR = get_parent_dir()
     args = get_args()
-
-    DEVICE = get_device()
+    CONFIG = get_config(config_path=PARENT_DIR/"configs/cifar100.yaml", args=args)
+    CLASSES = get_imagenet1k_classes(PARENT_DIR/"imagenet1k_classes.json")
 
     img_enc, text_enc = get_encoders_from_checkpoint(
-        ckpt_path=args.ckpt_path, config=CONFIG, max_len=args.max_len, device=DEVICE,
+        ckpt_path=CONFIG["CKPT_PATH"],
+        config=CONFIG,
+        max_len=CONFIG["MAX_LEN"],
+        device=CONFIG["DEVICE"],
     )
     img_enc.eval()
     text_enc.eval()
 
-    CLASSES = get_imagenet1k_classes(Path(__file__).resolve().parent/"imagenet1k_classes.json")
     
     faiss_idx = init_faiss_index(img_enc.embed_dim)
     tokenizer = get_tokenizer()
@@ -59,24 +59,24 @@ if __name__ == "__main__":
         max_len=text_enc.max_len,
     )
 
-    ds = ImageNet1kDataset(data_dir=args.data_dir, img_size=img_enc.img_size, classes=CLASSES)
+    ds = ImageNet1kDataset(data_dir=CONFIG["DATA_DIR"], img_size=img_enc.img_size, classes=CLASSES)
     dl = DataLoader(
         ds,
-        batch_size=args.batch_size,
+        batch_size=CONFIG["BATCH_SIZE"],
         shuffle=False,
-        num_workers=args.n_cpus,
+        num_workers=CONFIG["N_CPUS"],
         pin_memory=False,
         drop_last=False,
     )
     n_corrs = 0
     for image, gt in tqdm(dl):
-        image = image.to(DEVICE)
-        gt = gt.to(DEVICE)
+        image = image.to(CONFIG["DEVICE"])
+        gt = gt.to(CONFIG["DEVICE"])
 
         query_embed = img_enc(image)
-        _, nns = perform_semantic_search(query_embed=query_embed, faiss_idx=faiss_idx, k=args.k)
+        _, nns = perform_semantic_search(query_embed=query_embed, faiss_idx=faiss_idx, k=CONFIG["K"])
 
-        corr = get_number_of_correct_preds(gt=gt, nns=nns, k=args.k)
+        corr = get_number_of_correct_preds(gt=gt, nns=nns, k=CONFIG["K"])
         n_corrs += corr
     acc = n_corrs / len(ds)
     print(acc)
