@@ -58,11 +58,6 @@ class CLIP(nn.Module):
             embed_dim=embed_dim,
         )
 
-        # "The learnable temp parameter was initialized to the equivalent of 0.07."
-        # self.temp = nn.Parameter(torch.tensor((0.07,)))
-        # self.temp = nn.Parameter(torch.tensor((1,), dtype=torch.float64))
-        # self.temp = nn.Parameter(torch.tensor(1, dtype=torch.float64))
-
         self.gt = torch.arange(batch_size)
 
     def forward(self, image, token_ids, attn_mask):
@@ -74,7 +69,6 @@ class CLIP(nn.Module):
         img_embed = l2_norm(img_embed)
         text_embed = l2_norm(text_embed)
 
-        # sim_mat = torch.matmul(img_embed, text_embed.T) * torch.exp(self.temp)
         sim_mat = torch.matmul(img_embed, text_embed.T)
 
         self.gt = self.gt.to(img_embed.device)

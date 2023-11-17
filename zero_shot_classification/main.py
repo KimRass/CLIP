@@ -36,7 +36,7 @@ def get_number_of_correct_preds(gt, nns, k):
 if __name__ == "__main__":
     PARENT_DIR = get_parent_dir()
     args = get_args()
-    CONFIG = get_config(config_path=PARENT_DIR/"configs/cifar100.yaml", args=args)
+    CONFIG = get_config(config_path=PARENT_DIR/"imagenet1k.yaml", args=args)
     CLASSES = get_imagenet1k_classes(PARENT_DIR/"imagenet1k_classes.json")
 
     img_enc, text_enc = get_encoders_from_checkpoint(

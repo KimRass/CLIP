@@ -92,11 +92,6 @@ def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
     else:
         loss.backward()
         optim.step()
-
-    # "The learnable temperature parameter was clipped to prevent scaling the logits by more than 100
-    # which we found necessary to prevent training instability."
-    with torch.no_grad():
-        clip.temp.clamp_(max=100)
     return loss
 
 
@@ -136,7 +131,6 @@ def save_wandb_checkpoint(epoch, clip, optim, scaler, max_avg_acc, save_path):
         "epoch": epoch,
         "image_encoder": modify_state_dict(clip.img_enc.state_dict()),
         "text_encoder": modify_state_dict(clip.text_enc.state_dict()),
-        "temperature": clip.temp.item(),
         "optimizer": optim.state_dict(),
         "max_average_accuracy": max_avg_acc,
     }
@@ -262,12 +256,11 @@ if __name__ == "__main__":
         msg = f"[ {get_elapsed_time(start_time)} ]"
         msg += f"""[ {epoch}/{args.n_epochs} ]"""
         msg += f"""[ Loss: {avg_loss:.4f} ]"""
-        msg += f"""[ Temperature: {clip.temp.item():.4f} ]"""
         msg += f"""[ Accuracy: {avg_acc:.4f} ]"""
         print(msg)
 
         wandb.log(
-            {"Loss": avg_loss, "Temperature": clip.temp.item(), "Validation accuracy": avg_acc},
+            {"Loss": avg_loss, "Validation accuracy": avg_acc},
             step=epoch,
         )
 

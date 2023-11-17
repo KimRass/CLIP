@@ -26,3 +26,6 @@ python3 zero_shot_classification.py\
     --k=10 # Optional
 ```
 - Top-10 accuracy on train + validation set: 3.0%
+## Implementation Details
+- Temperature와 관련한 부분은 구현하지 않았습니다.
+    - "The learnable temperature parameter was clipped to prevent scaling the logits by more than 100 which we found necessary to prevent training instability."
