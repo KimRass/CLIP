@@ -10,8 +10,6 @@ import time
 from utils import get_parent_dir, get_config, get_elapsed_time, apply_seed
 from model import LinearClassifier
 from data_augmentation import get_train_transformer
-from loss import ClassificationLoss
-from evaluate import ClsTopKAccuracy
 
 
 def get_args():
@@ -60,7 +58,7 @@ def train_single_step(model, image, gt, optim, scaler, device):
         enabled=True if device.type == "cuda" else False,
     ):
         pred = model(image)
-        loss = crit(pred, gt)
+        loss = model.get_loss(pred=pred, gt=gt)
 
     optim.zero_grad()
     if CONFIG["DEVICE"].type == "cuda" and scaler is not None:
@@ -74,7 +72,7 @@ def train_single_step(model, image, gt, optim, scaler, device):
 
 
 @torch.no_grad()
-def validate(val_dl, model, metric, device):
+def validate(val_dl, model, device):
     model.eval()
     batch_size = val_dl.batch_size
     sum_corr = 0
@@ -83,7 +81,7 @@ def validate(val_dl, model, metric, device):
         gt = gt.to(device)
 
         pred = model(image)
-        acc = metric(pred=pred, gt=gt)
+        acc = model.get_top_k_acc(pred=pred, gt=gt, k=5)
         sum_corr += acc * batch_size
     avg_acc = sum_corr / (batch_size * len(val_dl))
     model.train()
@@ -118,9 +116,6 @@ if __name__ == "__main__":
     )
     scaler = GradScaler(enabled=True if CONFIG["DEVICE"].type == "cuda" else False)
 
-    crit = ClassificationLoss(n_classes=CONFIG["IMAGENET1K"]["N_CLASSES"])
-    metric = ClsTopKAccuracy(k=5)
-
     train_dl, val_dl = get_dls(
         data_dir=CONFIG["DATA_DIR"],
         img_size=CONFIG["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
@@ -144,7 +139,7 @@ if __name__ == "__main__":
             cum_loss += loss
         avg_loss = cum_loss / len(train_dl)
 
-        avg_acc = validate(val_dl=val_dl, model=model, metric=metric, device=CONFIG["DEVICE"])
+        avg_acc = validate(val_dl=val_dl, model=model, device=CONFIG["DEVICE"])
         if avg_acc > best_avg_acc:
             best_avg_acc = avg_acc
 

@@ -17,8 +17,7 @@ from utils import (
 )
 from flickr import FlickrDataset, DataCollatorForDynamicPadding
 from data_augmentation import get_val_transformer
-from clip import CLIP
-from evaluate import CLIPTopKAccuracy
+from model import CLIP
 
 CONFIG = load_config(Path(__file__).parent/"configs/flickr.yaml")
 
@@ -47,8 +46,8 @@ def get_args():
     return args
 
 
-def get_clip(config, batch_size, max_len, device, torch_compile=False):
-    clip = CLIP(
+def get_model(config, batch_size, max_len, device, torch_compile=False):
+    model = CLIP(
         img_size=config["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
         patch_size=config["ARCHITECTURE"]["IMG_ENC"]["PATCH_SIZE"],
         img_n_layers=config["ARCHITECTURE"]["IMG_ENC"]["N_LAYERS"],
@@ -65,12 +64,12 @@ def get_clip(config, batch_size, max_len, device, torch_compile=False):
         batch_size=batch_size,
     ).to(device)
     if torch_compile:
-        clip = torch.compile(clip)
-    clip.train()
-    return clip
+        model = torch.compile(model)
+    model.train()
+    return model
 
 
-def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
+def train_single_step(image, token_ids, attn_mask, model, optim, scaler):
     image = image.to(DEVICE)
     token_ids = token_ids.to(DEVICE)
     attn_mask = attn_mask.to(DEVICE)
@@ -81,8 +80,8 @@ def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
         dtype=torch.float16 if DEVICE.type == "cuda" else torch.bfloat16,
         enabled=True,
     ):
-        img_embed, text_embed = clip(image=image, token_ids=token_ids, attn_mask=attn_mask)
-        loss = clip.get_loss(img_embed=img_embed, text_embed=text_embed)
+        img_embed, text_embed = model(image=image, token_ids=token_ids, attn_mask=attn_mask)
+        loss = model.get_loss(img_embed=img_embed, text_embed=text_embed)
 
     optim.zero_grad()
     if DEVICE.type == "cuda" and scaler is not None:
@@ -96,8 +95,8 @@ def train_single_step(image, token_ids, attn_mask, clip, optim, scaler):
 
 
 @torch.no_grad()
-def validate(val_dl, clip, metric):
-    clip.eval()
+def validate(val_dl, model):
+    model.eval()
 
     accum_acc = 0
     for image, token_ids, attn_mask in val_dl:
@@ -105,32 +104,34 @@ def validate(val_dl, clip, metric):
         token_ids = token_ids.to(DEVICE)
         attn_mask = attn_mask.to(DEVICE)
 
-        img_embed, text_embed = clip(image=image, token_ids=token_ids, attn_mask=attn_mask)
-        acc = metric(img_embed=img_embed, text_embed=text_embed)
+        img_embed, text_embed = model(
+            image=image, token_ids=token_ids, attn_mask=attn_mask,
+        )
+        acc = model.get_top_k_acc(img_embed=img_embed, text_embed=text_embed, k=1)
 
         accum_acc += acc
     avg_acc = accum_acc / len(val_dl)
 
-    clip.train()
+    model.train()
     return avg_acc
 
 
-def save_checkpoint(clip, save_path):
+def save_checkpoint(model, save_path):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     state_dict = {
-        "image_encoder": modify_state_dict(clip.img_enc.state_dict()),
-        "text_encoder": modify_state_dict(clip.text_enc.state_dict()),
+        "image_encoder": modify_state_dict(model.img_enc.state_dict()),
+        "text_encoder": modify_state_dict(model.text_enc.state_dict()),
     }
     torch.save(state_dict, str(save_path))
     print("Saved the checkpoint.")
 
 
-def save_wandb_checkpoint(epoch, clip, optim, scaler, max_avg_acc, save_path):
+def save_wandb_checkpoint(epoch, model, optim, scaler, max_avg_acc, save_path):
     Path(save_path).parent.mkdir(parents=True, exist_ok=True)
     state_dict = {
         "epoch": epoch,
-        "image_encoder": modify_state_dict(clip.img_enc.state_dict()),
-        "text_encoder": modify_state_dict(clip.text_enc.state_dict()),
+        "image_encoder": modify_state_dict(model.img_enc.state_dict()),
+        "text_encoder": modify_state_dict(model.text_enc.state_dict()),
         "optimizer": optim.state_dict(),
         "max_average_accuracy": max_avg_acc,
     }
@@ -197,19 +198,18 @@ if __name__ == "__main__":
         n_cpus=args.n_cpus,
     )
 
-    clip = get_clip(
+    model = get_model(
         config=CONFIG,
         batch_size=args.batch_size,
         max_len=args.max_len,
         device=DEVICE,
         torch_compile=args.torch_compile,
     )
-    metric = CLIPTopKAccuracy(k=1, batch_size=args.batch_size)
 
     # "We use the Adam optimizer with decoupled weight decay regularization (Loshchilov & Hutter, 2017) applied to all
     # weights that are not gains or biases, and decay the learning rate using a cosine schedule."
     optim = AdamW(
-        clip.parameters(),
+        model.parameters(),
         lr=CONFIG["TRAINING"]["LR"],
         betas=(CONFIG["OPTIMIZER"]["BETA1"], CONFIG["OPTIMIZER"]["BETA2"]),
         weight_decay=CONFIG["OPTIMIZER"]["WEIGHT_DECAY"],
@@ -221,8 +221,8 @@ if __name__ == "__main__":
     if wandb.run.resumed:
         state_dict = torch.load(str(WANDB_CKPT_PATH), map_location=DEVICE)
         init_epoch = state_dict["epoch"]
-        clip.img_enc.load_state_dict(state_dict["image_encoder"])
-        clip.text_enc.load_state_dict(state_dict["text_encoder"])
+        model.img_enc.load_state_dict(state_dict["image_encoder"])
+        model.text_enc.load_state_dict(state_dict["text_encoder"])
         optim.load_state_dict(state_dict["optimizer"])
         scaler.load_state_dict(state_dict["scaler"])
         max_avg_acc = state_dict["max_average_accuracy"]
@@ -243,7 +243,7 @@ if __name__ == "__main__":
                 image=image,
                 token_ids=token_ids,
                 attn_mask=attn_mask,
-                clip=clip,
+                model=model,
                 optim=optim,
                 scaler=scaler,
             )
@@ -251,7 +251,7 @@ if __name__ == "__main__":
 
         avg_loss = accum_loss / len(train_dl)
 
-        avg_acc = validate(val_dl=val_dl, clip=clip, metric=metric)
+        avg_acc = validate(val_dl=val_dl, model=model)
 
         msg = f"[ {get_elapsed_time(start_time)} ]"
         msg += f"""[ {epoch}/{args.n_epochs} ]"""
@@ -266,7 +266,7 @@ if __name__ == "__main__":
 
         if avg_acc > max_avg_acc:
             cur_ckpt_path = SAVE_DIR/f"{args.run_id}_epoch_{epoch}.pth"
-            save_checkpoint(clip=clip, save_path=cur_ckpt_path)
+            save_checkpoint(model=model, save_path=cur_ckpt_path)
 
             max_avg_acc = avg_acc
             Path(prev_ckpt_path).unlink(missing_ok=True)
@@ -274,7 +274,7 @@ if __name__ == "__main__":
 
         save_wandb_checkpoint(
             epoch=epoch,
-            clip=clip,
+            model=model,
             optim=optim,
             scaler=scaler,
             max_avg_acc=max_avg_acc,
