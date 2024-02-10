@@ -89,9 +89,9 @@ def validate(val_dl, model, device):
 
 
 if __name__ == "__main__":
-    PARENT_DIR = get_parent_dir()
     args = get_args()
-    CONFIG = get_config(config_path=PARENT_DIR/"cifar100.yaml", args=args)
+    PARENT_DIR = get_parent_dir()
+    CONFIG = get_config(config_path=PARENT_DIR/"configs/cifar100.yaml", args=args)
 
     apply_seed(CONFIG["SEED"])
 

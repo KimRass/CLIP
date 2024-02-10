@@ -14,12 +14,14 @@ from utils import (
     get_elapsed_time,
     modify_state_dict,
     get_tokenizer,
+    get_parent_dir,
 )
 from data.flickr import FlickrDataset, DataCollatorForDynamicPadding
 from data.data_augmentation import get_val_transformer
 from model import CLIP
 
-CONFIG = load_config(Path(__file__).parent/"configs/flickr.yaml")
+PARENT_DIR = get_parent_dir()
+CONFIG = load_config(PARENT_DIR/"configs/flickr.yaml")
 
 DEVICE = get_device()
 
