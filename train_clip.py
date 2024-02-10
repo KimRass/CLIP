@@ -15,8 +15,8 @@ from utils import (
     modify_state_dict,
     get_tokenizer,
 )
-from flickr import FlickrDataset, DataCollatorForDynamicPadding
-from data_augmentation import get_val_transformer
+from data.flickr import FlickrDataset, DataCollatorForDynamicPadding
+from data.data_augmentation import get_val_transformer
 from model import CLIP
 
 CONFIG = load_config(Path(__file__).parent/"configs/flickr.yaml")
@@ -46,7 +46,7 @@ def get_args():
     return args
 
 
-def get_model(config, batch_size, max_len, device, torch_compile=False):
+def get_clip_model(config, batch_size, max_len, device, torch_compile=False):
     model = CLIP(
         img_size=config["ARCHITECTURE"]["IMG_ENC"]["IMG_SIZE"],
         patch_size=config["ARCHITECTURE"]["IMG_ENC"]["PATCH_SIZE"],
@@ -198,7 +198,7 @@ if __name__ == "__main__":
         n_cpus=args.n_cpus,
     )
 
-    model = get_model(
+    model = get_clip_model(
         config=CONFIG,
         batch_size=args.batch_size,
         max_len=args.max_len,

@@ -1,13 +1,13 @@
 import torchvision.transforms as T
 
 
-def _get_kernel_size(img_size):
+def get_kernel_size(img_size):
     return round(img_size * 0.06) // 2 * 2 + 1
 
 
 def get_train_transformer(img_size, to_tensor=True):
     # SimCLR (Chen et al., 2020)를 참고하여 구현했습니다.
-    kernel_size = _get_kernel_size(img_size)
+    kernel_size = get_kernel_size(img_size)
     transforms = [
         T.RandomResizedCrop(size=img_size, scale=(0.8, 1), ratio=(3 / 4, 4 / 3), antialias=True),
         T.RandomHorizontalFlip(p=0.5),

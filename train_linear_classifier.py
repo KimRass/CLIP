@@ -9,7 +9,7 @@ import time
 
 from utils import get_parent_dir, get_config, get_elapsed_time, apply_seed
 from model import LinearClassifier
-from data_augmentation import get_train_transformer
+from data.data_augmentation import get_train_transformer
 
 
 def get_args():

@@ -4,7 +4,7 @@ import argparse
 from tqdm import tqdm
 
 from utils import get_parent_dir, get_config, get_tokenizer
-from imagenet1k import get_imagenet1k_classes, ImageNet1kDataset
+from data.imagenet1k import get_imagenet1k_classes, ImageNet1kDataset
 from semantic_search import (
     init_faiss_index,
     get_encoders_from_checkpoint,

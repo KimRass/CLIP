@@ -10,13 +10,13 @@ from tqdm import tqdm
 from PIL import Image
 
 from utils import load_config, get_device, image_to_grid, get_tokenizer
-from data_augmentation import get_val_transformer
-from flickr import ImageDataset, encode, pad, get_attention_mask
-from train import get_clip
+from data.data_augmentation import get_val_transformer
+from data.flickr import ImageDataset, encode, pad, get_attention_mask
+from train_clip import get_clip_model
 
 
 def get_encoders_from_checkpoint(ckpt_path, config, max_len, device):
-    clip = get_clip(config=config, max_len=max_len, device=device)
+    clip = get_clip_model(config=config, max_len=max_len, device=device)
     img_enc = clip.img_enc
     text_enc = clip.text_enc
 
