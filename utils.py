@@ -96,10 +96,6 @@ def image_to_grid(image, n_cols, mean, std):
     return grid
 
 
-def l2_norm(x):
-    return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
-
-
 def modify_state_dict(state_dict, keyword="_orig_mod."):
     new_state_dict = OrderedDict()
     for old_key in list(state_dict.keys()):
@@ -112,10 +108,9 @@ def modify_state_dict(state_dict, keyword="_orig_mod."):
 
 
 def get_imagenet1k_classes(json_path):
-    json_path = "/Users/jongbeomkim/Desktop/workspace/CLIP/imagenet1k_classes.json"
     with open(json_path, mode="r") as f:
         classes = json.load(f)
-    classes = {k[0]: class_name for dir_name, class_name in classes.items()}
+    classes = {dir_name[0]: class_name for dir_name, class_name in classes.items()}
     return classes
 
 

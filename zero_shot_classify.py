@@ -27,13 +27,17 @@ def get_args():
     return args
 
 
+def label_to_prompt(label):
+    return f"A photo of a {label}"
+
+
 def get_number_of_correct_preds(gt, nns, k):
     arr_gt = gt.detach().cpu().numpy()
     eq = np.equal(nns, np.repeat(arr_gt[:, None], repeats=k, axis=1))
     return eq.sum(axis=1).sum()
 
 
-if __name__ == "__main__":
+def main():
     args = get_args()
     PARENT_DIR = get_parent_dir()
     CONFIG = get_config(config_path=PARENT_DIR/"configs/imagenet1k.yaml", args=args)
@@ -53,7 +57,7 @@ if __name__ == "__main__":
     tokenizer = get_tokenizer()
     add_texts_to_faiss_index(
         faiss_idx=faiss_idx,
-        idx2text={i[0]: i[1] for i in CLASSES.values()},
+        idx2text={i[0]: label_to_prompt(i[1]) for i in CLASSES.values()},
         text_enc=text_enc,
         tokenizer=tokenizer,
         max_len=text_enc.max_len,
@@ -80,3 +84,6 @@ if __name__ == "__main__":
         n_corrs += corr
     acc = n_corrs / len(ds)
     print(acc)
+
+
+if __name__ == "__main__":

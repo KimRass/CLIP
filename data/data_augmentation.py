@@ -6,7 +6,10 @@ def get_kernel_size(img_size):
 
 
 def get_train_transformer(img_size, to_tensor=True):
-    # SimCLR (Chen et al., 2020)를 참고하여 구현했습니다.
+    # "A random square crop from resized images is the only data augmentation
+    # used during training."
+    # 데이터가 부족하므로 SimCLR (Chen et al., 2020)를 참고하여 Data augmentation을
+    # 도입했습니다.
     kernel_size = get_kernel_size(img_size)
     transforms = [
         T.RandomResizedCrop(size=img_size, scale=(0.8, 1), ratio=(3 / 4, 4 / 3), antialias=True),

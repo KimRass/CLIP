@@ -15,7 +15,7 @@ from data.data_augmentation import get_train_transformer
 def get_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--ckpt_path", type=str, required=True)
+    parser.add_argument("--model_params", type=str, required=True)
     parser.add_argument("--data_dir", type=str, required=True)
     parser.add_argument("--n_epochs", type=int, required=True)
     parser.add_argument("--batch_size", type=int, required=True)

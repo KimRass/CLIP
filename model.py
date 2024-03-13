@@ -18,7 +18,16 @@ from utils import set_requires_grad, l2_norm
 
 
 class ImageEncoder(nn.Module):
-    def __init__(self, img_size, patch_size, n_layers, n_heads, hidden_dim, mlp_dim, embed_dim):
+    def __init__(
+        self,
+        img_size,
+        patch_size,
+        n_layers,
+        n_heads,
+        hidden_dim,
+        mlp_dim,
+        embed_dim,
+    ):
         super().__init__()
 
         self.img_size = img_size
@@ -44,7 +53,16 @@ class ImageEncoder(nn.Module):
 # "The text encoder is a Transformer with the architecture modifications described in Radford et al. (2019)."
 # As a base size we use a 63M-parameter 12-layer 512-wide model with 8 attention heads. The text sequence is bracketed with [SOS] and [EOS] tokens and the activations of the highest layer of the transformer at the [EOS] token are treated as the feature representation of the text which is layer normalized and then linearly projected into the multi-modal embedding space. Masked self-attention was used in the text encoder to preserve"
 class TextEncoder(nn.Module):
-    def __init__(self, vocab_size, max_len, n_layers, n_heads, hidden_dim, mlp_dim, embed_dim):
+    def __init__(
+        self,
+        vocab_size,
+        max_len,
+        n_layers,
+        n_heads,
+        hidden_dim,
+        mlp_dim,
+        embed_dim,
+    ):
         super().__init__()
 
         self.max_len = max_len
@@ -119,9 +137,13 @@ class CLIP(nn.Module):
         text_embed = self.text_enc(token_ids=token_ids, attn_mask=attn_mask)
         return img_embed, text_embed
 
+    @staticmethod
+    def _l2_norm(x):
+        return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
+
     def get_loss(self, img_embed, text_embed):
-        img_embed = l2_norm(img_embed)
-        text_embed = l2_norm(text_embed)
+        img_embed = self._l2_norm(img_embed)
+        text_embed = self._l2_norm(text_embed)
 
         sim_mat = torch.matmul(img_embed, text_embed.T)
 
@@ -130,10 +152,6 @@ class CLIP(nn.Module):
         text_loss = F.cross_entropy(sim_mat.T, self.gt, reduction="mean")
         tot_loss = (img_loss + text_loss) / 2
         return tot_loss
-
-    @staticmethod
-    def _l2_norm(x):
-        return x / torch.linalg.vector_norm(x, ord=2, dim=1, keepdim=True)
 
     def get_top_k_acc(self, img_embed, text_embed, k):
         img_embed = self._l2_norm(img_embed)
@@ -168,7 +186,10 @@ class CELossWithLabelSmoothing(nn.Module):
         self.n_classes = n_classes
 
     def forward(self, pred, gt, label_smoothing=0):
-        assert 0 <= label_smoothing <= 1, "The argument `label_smoothing` must be between 0 and 1!"
+        assert (
+            0 <= label_smoothing <= 1,
+            "The argument `label_smoothing` must be between 0 and 1!",
+        )
 
         if gt.ndim == 1:
             gt = torch.eye(self.n_classes, device=gt.device)[gt]
@@ -195,7 +216,17 @@ class ClsTopKAccuracy(nn.Module):
 
 
 class LinearClassifier(nn.Module):
-    def __init__(self, img_size, patch_size, n_layers, n_heads, hidden_dim, mlp_dim, embed_dim, n_classes):
+    def __init__(
+        self,
+        img_size,
+        patch_size,
+        n_layers,
+        n_heads,
+        hidden_dim,
+        mlp_dim,
+        embed_dim,
+        n_classes,
+    ):
         super().__init__()
 
         self.img_enc = ImageEncoder(
